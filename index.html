@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="Apt Checklist"/>
+<title>Apartment Checklist</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,system-ui,sans-serif;background:#FDF6F0;color:#2A1015;min-height:100vh}
+button,input,textarea{font-family:inherit}
+/* Header */
+.hdr{background:linear-gradient(135deg,#6B1A2A,#9B2335,#C0392B);color:#fff;padding:16px}
+.hdr-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.hdr h1{font-size:19px;font-weight:800}
+.hdr-sub{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#F5A87B;margin-bottom:3px}
+.hdr-meta{font-size:11px;color:rgba(255,255,255,.6);margin-top:3px}
+.hdr-btns{display:flex;gap:6px;flex-shrink:0}
+.btn-hdr{padding:6px 11px;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;background:rgba(255,255,255,.15);color:#fff}
+.btn-hdr.on{background:#F5A87B;color:#6B1A2A}
+/* Progress */
+.prog-row{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.8);margin:12px 0 4px}
+.prog-pct{color:#F5A87B;font-weight:700}
+.prog-bar{background:rgba(255,255,255,.2);border-radius:99px;height:5px}
+.prog-fill{background:#F5A87B;height:100%;border-radius:99px;transition:width .3s}
+/* Cost */
+.cost-total{background:#4A0E18;color:#F5A87B;font-size:12px;font-weight:700;padding:6px 16px;text-align:center;letter-spacing:.05em}
+/* Tabs */
+.tabs{display:flex;background:#FAE8DC;border-bottom:1px solid #EDD5CC}
+.tab{flex:1;padding:9px 0;border:none;background:transparent;font-size:12px;color:#8A5A62;border-bottom:2.5px solid transparent;cursor:pointer}
+.tab.on{font-weight:700;color:#C0392B;border-bottom-color:#C0392B}
+/* Search */
+.search-wrap{padding:8px 12px;background:#FAE8DC;border-bottom:1px solid #EDD5CC}
+.search-wrap input{width:100%;padding:7px 11px;border:1px solid #EDD5CC;border-radius:8px;font-size:13px;background:#fff;outline:none}
+/* Room/Tag scroll */
+.scroll-tabs{display:flex;overflow-x:auto;padding:6px 10px;gap:5px;background:#FAE8DC;border-bottom:1px solid #EDD5CC;scrollbar-width:none}
+.scroll-tabs::-webkit-scrollbar{display:none}
+.stab{flex-shrink:0;padding:5px 11px;border-radius:99px;border:none;font-size:11px;cursor:pointer;white-space:nowrap;background:#fff;color:#8A5A62;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.stab.on{background:#C0392B;color:#fff;font-weight:700}
+.stab .badge{margin-left:4px;font-size:9px;font-weight:800;padding:1px 5px;border-radius:99px;background:rgba(255,255,255,.25);color:#fff}
+.stab:not(.on) .badge{background:#FAE8DC;color:#C0392B}
+/* Edit banner */
+.edit-banner{background:#FFF8E8;border-bottom:1px solid #F0DCA0;padding:6px 12px;font-size:11px;color:#7A5A00}
+/* List */
+.list{padding:10px 12px 80px}
+.list-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.list-hdr h2{font-size:15px;font-weight:800}
+.list-cnt{font-size:11px;color:#8A5A62}
+/* Room image */
+.room-img-wrap{margin-bottom:10px;border-radius:10px;overflow:hidden;border:1px solid #EDD5CC;background:#FAE8DC;position:relative}
+.room-img-wrap img{width:100%;display:block;max-height:200px;object-fit:cover}
+.room-img-placeholder{padding:14px;text-align:center;font-size:12px;color:#8A5A62}
+.btn-room-img{margin:0 12px 10px;width:calc(100% - 24px);padding:8px;border:1.5px dashed #EDD5CC;border-radius:8px;background:transparent;color:#8A5A62;font-size:12px;cursor:pointer}
+/* Item card */
+.item{background:#fff;border:1px solid #EDD5CC;border-radius:11px;padding:10px 11px;margin-bottom:6px}
+.item.done{background:#F9EEF0;border-color:#E8A0A8}
+.item.confirm-del{background:#FFF0F0;border-color:#F5C6C6}
+.item-row{display:flex;align-items:center;gap:7px}
+.chk{width:21px;height:21px;border-radius:6px;flex-shrink:0;border:2px solid #E8798A;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff}
+.chk.on{background:#C0392B;border-color:#C0392B}
+.item-main{flex:1;min-width:0}
+.item-name{font-size:13px;font-weight:500}
+.item-name.done{text-decoration:line-through;color:#8A5A62}
+.item-cost-inline{font-size:11px;color:#C0392B;font-weight:600;margin-left:5px}
+.item-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
+.itag{font-size:10px;padding:2px 6px;border-radius:99px;font-weight:600}
+.item-btns{display:flex;gap:4px;flex-shrink:0}
+.ib{border:none;border-radius:6px;padding:4px 7px;font-size:13px;cursor:pointer;background:#F5F0EE;color:#8A5A62}
+.ib.on{background:#FAE8DC;color:#C0392B}
+/* Panels */
+.panel{margin-top:8px;padding:11px;background:#FAE8DC;border-radius:10px;display:flex;flex-direction:column;gap:7px}
+.panel-title{font-size:11px;font-weight:700;color:#6B1A2A;letter-spacing:.05em}
+.panel input,.panel textarea{width:100%;padding:6px 9px;border:1px solid #EDD5CC;border-radius:7px;font-size:12px;background:#fff;outline:none;color:#2A1015}
+.panel textarea{resize:vertical;min-height:56px}
+.panel-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.btn-sm{padding:5px 10px;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer}
+.btn-add-link{background:#E8798A;color:#fff}
+.btn-save{background:#C0392B;color:#fff}
+.btn-cancel{background:#ddd;color:#555}
+.btn-clear{background:#fee;color:#C0392B}
+.btn-del-link{background:#fee;color:#C0392B;font-size:10px;padding:3px 7px}
+.link-item{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.link-item a{font-size:11px;color:#E8652A;word-break:break-all;flex:1}
+.img-grid{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px}
+.img-thumb{position:relative;width:70px;height:56px}
+.img-thumb img{width:100%;height:100%;object-fit:cover;border-radius:6px;border:1px solid #EDD5CC}
+.img-del{position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:99px;background:#C0392B;color:#fff;border:none;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+/* Tag picker */
+.tag-grid{display:flex;flex-wrap:wrap;gap:5px}
+.tpill{padding:4px 9px;border-radius:99px;border:1.5px solid #EDD5CC;background:#fff;color:#8A5A62;font-size:11px;cursor:pointer}
+.tpill.on{font-weight:700}
+/* Confirm */
+.confirm-row{display:flex;align-items:center;gap:7px}
+.confirm-txt{flex:1;font-size:12px;color:#9B1B1B}
+/* Add item */
+.add-row{display:flex;gap:7px;margin-top:8px}
+.add-input{flex:1;padding:9px 11px;border-radius:9px;border:1.5px dashed #E8798A;font-size:13px;outline:none;background:#fff}
+.btn-add-item{padding:9px 14px;background:#C0392B;color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer}
+.btn-show-edit{width:100%;margin-top:8px;padding:9px;border-radius:9px;border:1.5px dashed #EDD5CC;background:transparent;color:#8A5A62;font-size:12px;cursor:pointer}
+/* Preview row */
+.preview-imgs{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;padding-left:28px}
+.preview-img{width:65px;height:52px;object-fit:cover;border-radius:7px;border:1px solid #EDD5CC}
+.preview-links{padding-left:28px;margin-top:3px;display:flex;flex-direction:column;gap:2px}
+.preview-link{font-size:11px;color:#E8652A;word-break:break-all}
+.preview-note{padding-left:28px;margin-top:3px;font-size:11px;color:#8A5A62;font-style:italic}
+/* Empty */
+.empty{text-align:center;padding:24px 0;color:#8A5A62;font-size:13px}
+/* Save toast */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1C2B1E;color:#8CB88E;padding:7px 16px;border-radius:99px;font-size:12px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast" class="toast">✓ Saved</div>
+<input type="file" id="fi" accept="image/*" style="display:none" multiple/>
+<input type="file" id="ri" accept="image/*" style="display:none"/>
+<script>
+// ─── DEFAULT DATA ────────────────────────────────────────────────────────────
+var DR=[
+  {id:"kitchen",label:"Kitchen",emoji:"🍳",items:[
+    "Refrigerator","Microwave","Toaster or toaster oven","Coffee maker / espresso machine",
+    "Kettle","Blender","Knife set + block","Cutting boards (2)","Non-stick skillet","Saucepan (2-3 qt)",
+    "Large pot (pasta)","Sheet pan + roasting pan","Mixing bowls","Measuring cups + spoons",
+    "Colander","Spatulas, tongs, wooden spoons","Can opener","Dish drying rack",
+    "Dish soap + sponges","Paper towel holder","Trash can + recycling bin",
+    "Storage containers","Dish towels (4-6)","Pot holders / oven mitts",
+    "Under-cabinet lighting","Counter herb garden"]},
+  {id:"dining",label:"Dining Room",emoji:"🪑",items:[
+    "Dining table (seats 4)","Dining chairs (4)","Dinner plates (set of 4-6)","Bowls (set of 4-6)",
+    "Glasses — water + wine","Mugs (4)","Flatware set","Serving bowls / platters",
+    "Placemats or table runner","Dining area rug","Pendant light or chandelier",
+    "Wall art or mirror","Sideboard or buffet"]},
+  {id:"living",label:"Living Room",emoji:"🛋️",items:[
+    "Sofa","Coffee table","Side table(s)","TV stand / media console","TV (55-65\")",
+    "Bookshelf","Area rug (8x10 ft)","Floor lamp","Table lamp(s)","Throw pillows (4-6)",
+    "Throw blanket","Wall art","Curtains + rod","Streaming device",
+    "Extension cords + power strips","Plants (1-2)"]},
+  {id:"office",label:"Home Office",emoji:"💻",items:[
+    "Standing desk (electric)","Ergonomic desk chair","Walking pad / treadmill",
+    "Whiteboard","Whiteboard markers + eraser","Monitor","Monitor arm",
+    "Laptop stand","Keyboard + mouse","USB hub / dock","Desk lamp",
+    "Cable management","Desk organizer","Printer (optional)","Bookcase","Anti-fatigue mat",
+    "Headphones","Webcam"]},
+  {id:"bedroom",label:"Bedroom",emoji:"🛏️",items:[
+    "Bed frame (queen or king)","Mattress","Platform base / box spring","Mattress protector",
+    "Pillows (2-4)","Pillow protectors","Sheet sets (2-3)","Duvet + cover",
+    "Comforter or quilt","Nightstand(s)","Dresser","Full-length mirror",
+    "Bedside lamp(s)","Bedside rug","Blackout curtains + rod","Alarm clock",
+    "Hangers (20-30)","Laundry hamper","Wall art"]},
+  {id:"bathroom",label:"Bathroom",emoji:"🚿",items:[
+    "Shower curtain + liner + rings","Shower caddy","Bath mat (2)",
+    "Towels — bath, hand, washcloth","Towel hooks or bar","Toilet brush + holder",
+    "Toilet paper holder","Toilet paper (stock up!)","Hand soap dispenser",
+    "Toothbrush holder","Wall mirror / medicine cabinet","Over-toilet shelving",
+    "Hair dryer","Scale","Trash can","Candle or diffuser","Extra toilet paper storage"]},
+  {id:"closet",label:"Closet",emoji:"👔",items:[
+    "Closet organizer system","Extra hanging rod","Shoe rack / cubbies",
+    "Shelf dividers","Velvet hangers (30-50)","Specialty hangers",
+    "Drawer organizer inserts","Storage bins / baskets","Door hooks",
+    "Over-door organizer","Vacuum storage bags","Lint roller","Cedar blocks"]},
+  {id:"laundry",label:"Laundry",emoji:"🧺",items:[
+    "Washing machine (check if in-unit)","Dryer (check if in-unit)","Laundry detergent",
+    "Fabric softener / dryer sheets","Laundry baskets (2)","Mesh laundry bags",
+    "Stain remover","Drying rack (for delicates)","Iron + ironing board",
+    "Garment steamer","Lint trap brush","Washing machine cleaner tablets"]},
+  {id:"personalcare",label:"Personal Care",emoji:"💆",items:[
+    "Skincare — cleanser","Skincare — moisturizer","Skincare — SPF",
+    "Skincare — serums / treatments","Makeup organizer","Makeup brushes + tools",
+    "Perfume / cologne","Body lotion","Deodorant (stock)","Razors + shaving supplies",
+    "Nail care kit","Hair tools (straightener / curler)","Hair products",
+    "First aid kit","Vitamins / supplements organizer","Medication organizer",
+    "Cotton pads + swabs","Period supplies","Tweezers / grooming kit"]},
+  {id:"clothes",label:"Clothes & Wardrobe",emoji:"👗",items:[
+    "Everyday tops","Blouses / shirts (work)","Jeans","Trousers / dress pants",
+    "Dresses","Skirts","Shorts","Sweaters / knitwear","Hoodies / sweatshirts",
+    "Blazers / jackets","Winter coat","Rain jacket","Athleisure set",
+    "Pajamas (2-3 sets)","Underwear (7-10 pairs)","Bras (3-5)","Socks (2 weeks worth)",
+    "Casual shoes / sneakers","Heels / dress shoes","Boots","Sandals",
+    "Winter boots","Sunglasses","Hats","Bags / totes","Belts","Jewelry organizer"]},
+  {id:"workout",label:"Workout & Fitness",emoji:"🏋️",items:[
+    "Yoga mat","Resistance bands (set)","Dumbbells (light + heavy)",
+    "Foam roller","Jump rope","Workout mirror (optional)","Pull-up bar (door mount)",
+    "Gym bag","Water bottle (insulated)","Workout clothes (5 sets)",
+    "Sports bras (3-5)","Running shoes","Workout gloves",
+    "Protein / supplements","Gym membership or app subscription",
+    "Fitness tracker / Apple Watch","Bluetooth speaker for workouts"]},
+  {id:"general",label:"General",emoji:"🏠",items:[
+    "Tool kit (hammer, screwdrivers, level)","Stud finder","Command hooks + strips",
+    "Picture hanging hardware","Mop, broom, dustpan","Vacuum cleaner","Cleaning caddy",
+    "All-purpose cleaner","Glass cleaner","Step stool / ladder",
+    "Fire extinguisher","Smoke + CO detectors","Flashlight + batteries",
+    "Door mat (entry)","Key hooks by door","Wi-Fi router / modem",
+    "Smart home devices (optional)","Moving boxes / storage"]}
+];
+
+var ALL_TAGS=[
+  {id:"furniture",label:"Furniture",emoji:"🛋️",tc:"#6B1A2A",bg:"#FAE8DC"},
+  {id:"organization",label:"Organization",emoji:"🗂️",tc:"#C0392B",bg:"#FDECEA"},
+  {id:"tools",label:"Tools",emoji:"🔧",tc:"#8B3A1A",bg:"#FAE8D4"},
+  {id:"beauty",label:"Beauty",emoji:"💄",tc:"#B5294E",bg:"#FCE8EE"},
+  {id:"decor",label:"Decor",emoji:"🖼️",tc:"#E8652A",bg:"#FEF0E6"},
+  {id:"kitchen",label:"Kitchen",emoji:"🍳",tc:"#D4500A",bg:"#FDEEE5"},
+  {id:"tech",label:"Tech",emoji:"💻",tc:"#7A1F3A",bg:"#F9E8EF"},
+  {id:"linens",label:"Linens",emoji:"🛏️",tc:"#C45A70",bg:"#FDE8EE"},
+  {id:"lighting",label:"Lighting",emoji:"💡",tc:"#E0772A",bg:"#FEF2E6"},
+  {id:"cleaning",label:"Cleaning",emoji:"🧹",tc:"#A03020",bg:"#FAE8E4"},
+  {id:"safety",label:"Safety",emoji:"🔒",tc:"#8A1A1A",bg:"#FAE8E8"},
+  {id:"clothing",label:"Clothing",emoji:"👗",tc:"#7A3A6A",bg:"#F5E8F5"},
+  {id:"fitness",label:"Fitness",emoji:"🏋️",tc:"#1A6A3A",bg:"#E8F5EC"},
+  {id:"selfcare",label:"Self Care",emoji:"💆",tc:"#5A2A6A",bg:"#F0E8F8"},
+  {id:"priority",label:"Priority",emoji:"⭐",tc:"#8A6A00",bg:"#FFF8E0"},
+  {id:"splurge",label:"Splurge",emoji:"💸",tc:"#8A0A2A",bg:"#FFE8F0"},
+  {id:"budget",label:"Budget Find",emoji:"💰",tc:"#0A5A1A",bg:"#E0F8E8"},
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+var rooms,checked,meta,roomImgs,viewMode,activeRoom,activeTag,searchQ,editMode,openPanel,panelDraft,confirmDelKey,tagPickerKey,addTagInput;
+var saveTimer=null,toastTimer=null;
+var LSKEY="aptchk_v3";
+
+function initFresh(){
+  rooms=DR.map(function(r){return{id:r.id,label:r.label,emoji:r.emoji,items:r.items.map(function(n){return n})};});
+  checked={};meta={};roomImgs={};
+  rooms.forEach(function(r){r.items.forEach(function(n){var k=r.id+"::"+n;checked[k]=false;meta[k]={tags:[],links:[],images:[],notes:"",cost:""};});});
+  viewMode="room";activeRoom="kitchen";activeTag=null;searchQ="";editMode=false;openPanel=null;panelDraft=null;confirmDelKey=null;tagPickerKey=null;addTagInput="";
+}
+
+function saveState(){
+  try{
+    // Save images separately to avoid one big JSON blowing quota
+    var imgMap={};
+    Object.keys(meta).forEach(function(k){
+      if(meta[k].images&&meta[k].images.length){
+        imgMap[k]=meta[k].images;
+      }
+    });
+    var roomImgMap={};
+    Object.keys(roomImgs).forEach(function(rid){if(roomImgs[rid])roomImgMap[rid]=roomImgs[rid];});
+
+    var payload={rooms:rooms,checked:checked,viewMode:viewMode,activeRoom:activeRoom};
+    // meta without images
+    var metaNoImg={};
+    Object.keys(meta).forEach(function(k){metaNoImg[k]={tags:meta[k].tags,links:meta[k].links,notes:meta[k].notes,cost:meta[k].cost};});
+    payload.meta=metaNoImg;
+
+    localStorage.setItem(LSKEY,JSON.stringify(payload));
+
+    // Save images in separate keys
+    try{localStorage.setItem(LSKEY+"_imgs",JSON.stringify(imgMap));}catch(e){localStorage.removeItem(LSKEY+"_imgs");}
+    try{localStorage.setItem(LSKEY+"_rimgs",JSON.stringify(roomImgMap));}catch(e){localStorage.removeItem(LSKEY+"_rimgs");}
+
+    showToast("✓ Saved");
+  }catch(e){showToast("⚠️ Storage full — try removing some images");}
+}
+
+function loadState(){
+  try{
+    var raw=localStorage.getItem(LSKEY);
+    if(!raw){initFresh();return;}
+    var d=JSON.parse(raw);
+    rooms=d.rooms||DR.map(function(r){return{id:r.id,label:r.label,emoji:r.emoji,items:r.items.slice()};});
+    checked=d.checked||{};
+    viewMode=d.viewMode||"room";
+    activeRoom=d.activeRoom||"kitchen";
+    meta=d.meta||{};
+    roomImgs={};
+
+    // Ensure all keys exist
+    rooms.forEach(function(r){
+      r.items.forEach(function(n){
+        var k=r.id+"::"+n;
+        if(checked[k]===undefined)checked[k]=false;
+        if(!meta[k])meta[k]={tags:[],links:[],images:[],notes:"",cost:""};
+        if(!meta[k].images)meta[k].images=[];
+        if(!meta[k].links)meta[k].links=[];
+        if(!meta[k].tags)meta[k].tags=[];
+      });
+    });
+
+    // Load images
+    try{
+      var imgs=JSON.parse(localStorage.getItem(LSKEY+"_imgs")||"{}");
+      Object.keys(imgs).forEach(function(k){if(meta[k])meta[k].images=imgs[k]||[];});
+    }catch(e){}
+    try{
+      var rimgs=JSON.parse(localStorage.getItem(LSKEY+"_rimgs")||"{}");
+      rooms.forEach(function(r){roomImgs[r.id]=rimgs[r.id]||null;});
+    }catch(e){}
+
+    activeTag=null;searchQ="";editMode=false;openPanel=null;panelDraft=null;confirmDelKey=null;tagPickerKey=null;addTagInput="";
+  }catch(e){initFresh();}
+}
+
+function queueSave(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(saveState,800);
+}
+
+function showToast(msg){
+  var t=document.getElementById("toast");
+  t.textContent=msg;t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){t.classList.remove("show");},2000);
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function mk(rid,n){return rid+"::"+n;}
+function h(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function getMeta(k){return meta[k]||(meta[k]={tags:[],links:[],images:[],notes:"",cost:""});}
+function totalCost(){
+  var t=0;
+  Object.keys(meta).forEach(function(k){var c=parseFloat((meta[k].cost||"").replace(/[^0-9.]/g,""));if(!isNaN(c))t+=c;});
+  return t.toFixed(2);
+}
+function checkedCost(){
+  var t=0;
+  Object.keys(meta).forEach(function(k){if(checked[k]){var c=parseFloat((meta[k].cost||"").replace(/[^0-9.]/g,""));if(!isNaN(c))t+=c;}});
+  return t.toFixed(2);
+}
+function allKeys(){return rooms.flatMap(function(r){return r.items.map(function(n){return mk(r.id,n);});});}
+function doneCnt(){return allKeys().filter(function(k){return checked[k];}).length;}
+function totalCnt(){return allKeys().length;}
+function pct(){var t=totalCnt();return t>0?Math.round(doneCnt()/t*100):0;}
+function roomDone(r){return r.items.filter(function(n){return checked[mk(r.id,n)];}).length;}
+function curRoom(){return rooms.find(function(r){return r.id===activeRoom;})||rooms[0];}
+function tagInfo(tid){
+  var cnt=0,chk=0;
+  rooms.forEach(function(r){r.items.forEach(function(n){var k=mk(r.id,n),m=getMeta(k);if(m.tags.indexOf(tid)>=0){cnt++;if(checked[k])chk++;}});});
+  return{cnt:cnt,chk:chk};
+}
+function getDisplayed(){
+  var flat=[];
+  rooms.forEach(function(r){r.items.forEach(function(n){flat.push({room:r,name:n,key:mk(r.id,n)});});});
+  if(searchQ.trim()){var q=searchQ.toLowerCase();return flat.filter(function(x){return x.name.toLowerCase().indexOf(q)>=0;});}
+  if(viewMode==="room")return flat.filter(function(x){return x.room.id===activeRoom;});
+  if(viewMode==="tag"&&activeTag)return flat.filter(function(x){return getMeta(x.key).tags.indexOf(activeTag)>=0;});
+  return[];
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function render(){
+  var p=pct(),dc=doneCnt(),tc=totalCnt(),cr=curRoom(),disp=getDisplayed();
+  var tCost=totalCost(),sCost=checkedCost();
+
+  // Room tabs
+  var roomTabsHtml="";
+  if(!searchQ&&viewMode==="room"){
+    roomTabsHtml='<div class="scroll-tabs">'+rooms.map(function(r){
+      var d=roomDone(r),a=r.id===activeRoom;
+      var badge=d>0?'<span class="badge">'+d+"/"+r.items.length+"</span>":"";
+      return'<button class="stab'+(a?" on":"")+'" onclick="setRoom(\''+r.id+'\')">'+r.emoji+" "+r.label+badge+"</button>";
+    }).join("")+"</div>";
+  }
+
+  // Tag tabs
+  var tagTabsHtml="";
+  if(!searchQ&&viewMode==="tag"){
+    tagTabsHtml='<div class="scroll-tabs">'+ALL_TAGS.map(function(t){
+      var i=tagInfo(t.id),a=activeTag===t.id;
+      var badge=i.cnt>0?'<span class="badge">'+i.chk+"/"+i.cnt+"</span>":"";
+      return'<button class="stab'+(a?" on":"")+'" style="'+(a?"background:"+t.tc+";color:#fff":"border-color:"+t.bg)+'" onclick="setTag(\''+t.id+'\')">'+t.emoji+" "+t.label+badge+"</button>";
+    }).join("")+"</div>";
+  }
+
+  // List header
+  var listHdr="";
+  if(!searchQ&&viewMode==="room")listHdr='<div class="list-hdr"><h2>'+cr.emoji+" "+h(cr.label)+'</h2><span class="list-cnt">'+roomDone(cr)+"/"+cr.items.length+" done</span></div>";
+  if(!searchQ&&viewMode==="tag"&&!activeTag)listHdr='<div class="empty">👆 Select a tag above</div>';
+  if(!searchQ&&viewMode==="tag"&&activeTag){var tobj=ALL_TAGS.find(function(t){return t.id===activeTag;})||{};listHdr='<div class="list-hdr"><h2>'+tobj.emoji+" "+h(tobj.label||"")+'</h2><span class="list-cnt">'+disp.length+" items</span></div>";}
+  if(searchQ)listHdr='<div class="list-hdr"><h2>Search results</h2><span class="list-cnt">'+disp.length+" found</span></div>";
+
+  // Room image
+  var roomImgHtml="";
+  if(!searchQ&&viewMode==="room"){
+    var ri=roomImgs[activeRoom];
+    if(ri){
+      roomImgHtml='<div class="room-img-wrap"><img src="'+ri+'" alt="room"/><div style="padding:5px 8px;display:flex;gap:6px">'
+        +'<button class="btn-sm btn-cancel" onclick="setRoomImg(\''+activeRoom+'\',null)" style="font-size:10px">Remove photo</button>'
+        +'<button class="btn-sm btn-save" onclick="triggerRoomImg(\''+activeRoom+'\')" style="font-size:10px">Replace photo</button>'
+        +'</div></div>';
+    }else{
+      roomImgHtml='<button class="btn-room-img" onclick="triggerRoomImg(\''+activeRoom+'\')">📷 Add room photo / mood board</button>';
+    }
+  }
+
+  // Items
+  var itemsHtml=disp.map(function(x){return renderItem(x.room,x.name,x.key);}).join("");
+
+  // Add row
+  var addHtml="";
+  if(!searchQ&&viewMode==="room"&&editMode){
+    addHtml='<div class="add-row"><input class="add-input" id="addInput" placeholder="Add item to '+h(cr.label)+'…" onkeydown="if(event.key===\'Enter\')doAddItem()"/><button class="btn-add-item" onclick="doAddItem()">Add</button></div>';
+  }else if(!searchQ&&viewMode==="room"&&!editMode){
+    addHtml='<button class="btn-show-edit" onclick="toggleEdit()">＋ Add or remove items</button>';
+  }
+
+  document.getElementById("app").innerHTML=
+    '<div class="hdr">'
+      +'<div class="hdr-sub">Chestnut Hall · Philadelphia</div>'
+      +'<div class="hdr-top">'
+        +'<div><h1>Apartment Checklist</h1><div class="hdr-meta">750 sq ft · 1BR/1BA · '+tc+' items</div></div>'
+        +'<div class="hdr-btns">'
+          +'<button class="btn-hdr'+(editMode?" on":"")+'" onclick="toggleEdit()">'+(editMode?"✓ Done":"✏️ Edit")+"</button>"
+        +"</div>"
+      +"</div>"
+      +'<div class="prog-row"><span>'+dc+" of "+tc+' done</span><span class="prog-pct">'+p+"%</span></div>"
+      +'<div class="prog-bar"><div class="prog-fill" style="width:'+p+'%"></div></div>'
+    +"</div>"
+    +'<div class="cost-total">💰 Budgeted: $'+tCost+' &nbsp;|&nbsp; Purchased: $'+sCost+"</div>"
+    +'<div class="tabs">'
+      +'<button class="tab'+(viewMode==="room"?" on":"")+'" onclick="setView(\'room\')">🏠 By Room</button>'
+      +'<button class="tab'+(viewMode==="tag"?" on":"")+'" onclick="setView(\'tag\')">🏷️ By Tag</button>'
+    +"</div>"
+    +'<div class="search-wrap"><input placeholder="Search all items…" value="'+h(searchQ)+'" oninput="setSearch(this.value)"/></div>'
+    +roomTabsHtml+tagTabsHtml
+    +(editMode?'<div class="edit-banner">✏️ Edit mode — 🗑️ delete · 🏷️ tags · 📎 attach · $ cost</div>':"")
+    +'<div class="list">'+listHdr+roomImgHtml+itemsHtml+addHtml+"</div>";
+}
+
+function renderItem(room,name,k){
+  var isDone=!!checked[k],m=getMeta(k);
+  var isOpen=openPanel===k,isConf=confirmDelKey===k,isTags=tagPickerKey===k;
+  var hasLinks=m.links&&m.links.length>0,hasImgs=m.images&&m.images.length>0,hasNotes=!!m.notes,hasCost=!!m.cost;
+  var hasExtra=hasLinks||hasImgs||hasNotes||hasCost||m.tags.length>0;
+  var showRoom=!!(searchQ||(viewMode==="tag"));
+
+  if(isConf){
+    return'<div class="item confirm-del">'
+      +'<div class="confirm-row">'
+        +'<span class="confirm-txt">Remove <strong>"'+h(name)+'"</strong>?</span>'
+        +'<button class="btn-sm btn-save" onclick="doDelete(\''+h(room.id)+'\',\''+h(name).replace(/'/g,"&#39;")+'\')">Remove</button>'
+        +'<button class="btn-sm btn-cancel" onclick="setConf(null)">Cancel</button>'
+      +"</div></div>";
+  }
+
+  // Tag pills
+  var tagPills=m.tags.map(function(tid){var t=ALL_TAGS.find(function(x){return x.id===tid;});return t?'<span class="itag" style="background:'+t.bg+';color:'+t.tc+'">'+t.emoji+t.label+"</span>":"";}).join("");
+  var costBadge=hasCost?'<span class="item-cost-inline">$'+h(m.cost)+"</span>":"";
+
+  // Previews (collapsed)
+  var prevHtml="";
+  if(!isOpen&&!isTags&&hasExtra){
+    if(m.tags.length>0)prevHtml+='<div class="item-tags">'+tagPills+"</div>";
+    if(hasLinks)prevHtml+='<div class="preview-links">'+m.links.map(function(l){return'<a class="preview-link" href="'+h(l.startsWith("http")?l:"https://"+l)+'" target="_blank">🔗 '+h(l.length>50?l.slice(0,50)+"…":l)+"</a>";}).join("")+"</div>";
+    if(hasImgs)prevHtml+='<div class="preview-imgs">'+m.images.map(function(src){return'<img class="preview-img" src="'+src+'" alt=""/>';}).join("")+"</div>";
+    if(hasNotes)prevHtml+='<div class="preview-note">📝 '+h(m.notes.length>80?m.notes.slice(0,80)+"…":m.notes)+"</div>";
+  }
+
+  // Buttons
+  var delBtn=editMode?'<button class="ib" onclick="setConf(\''+k+'\')">🗑️</button>':"";
+  var tagBtn=editMode?'<button class="ib'+(isTags?" on":"")+'" onclick="togTP(\''+k+'\')">🏷️</button>':"";
+  var attBtn='<button class="ib'+(isOpen?" on":(hasExtra?" on":""))+'" onclick="togPanel(\''+k+'\')">📎</button>';
+
+  // Panel
+  var panelHtml="";
+  if(isOpen&&panelDraft){
+    var pd=panelDraft;
+    // Links section
+    var linksHtml='<div class="panel-title">🔗 LINKS</div>';
+    linksHtml+='<div id="pd-links">'+(pd.links||[]).map(function(l,i){
+      return'<div class="link-item" style="margin-bottom:4px">'
+        +'<input value="'+h(l)+'" oninput="pdLinkEdit('+i+',this.value)" style="flex:1;min-width:0;padding:5px 8px;border:1px solid #EDD5CC;border-radius:6px;font-size:11px;background:#fff;outline:none"/>'
+        +'<button class="btn-sm btn-del-link" onclick="pdLinkDel('+i+')">✕</button>'
+      +"</div>";
+    }).join("")+"</div>"
+    +'<button class="btn-sm btn-add-link" onclick="pdLinkAdd()">＋ Add link</button>';
+
+    // Images
+    var imgsHtml='<div class="panel-title" style="margin-top:2px">📷 IMAGES</div>';
+    if(pd.images&&pd.images.length){
+      imgsHtml+='<div class="img-grid">'+(pd.images||[]).map(function(src,i){
+        return'<div class="img-thumb"><img src="'+src+'"/><button class="img-del" onclick="pdImgDel('+i+')">✕</button></div>';
+      }).join("")+"</div>";
+    }
+    imgsHtml+='<button class="btn-sm btn-add-link" onclick="triggerItemImgs()">＋ Add images</button>';
+
+    // Notes
+    var notesHtml='<div class="panel-title">📝 NOTES</div><textarea oninput="pd.notes=this.value" placeholder="Notes, measurements, ideas…">'+h(pd.notes||"")+"</textarea>";
+
+    // Cost
+    var costHtml='<div class="panel-title">💰 COST</div><input type="number" min="0" step="0.01" placeholder="0.00" value="'+h(pd.cost||"")+'" oninput="pd.cost=this.value" style="width:120px"/>';
+
+    // Tags
+    var tgHtml='<div class="panel-title">🏷️ TAGS</div><div class="tag-grid">'
+      +ALL_TAGS.map(function(t){var sel=pd.tags.indexOf(t.id)>=0;return'<button class="tpill'+(sel?" on":"")+'" style="'+(sel?"border-color:"+t.tc+";background:"+t.bg+";color:"+t.tc:"")+'" onclick="pdTogTag(\''+t.id+'\')">'+t.emoji+" "+t.label+"</button>";}).join("")
+      +"</div>"
+      +'<div style="display:flex;gap:5px;margin-top:3px"><input placeholder="Custom tag…" value="'+h(addTagInput)+'" oninput="addTagInput=this.value" style="flex:1;padding:5px 8px;border:1px solid #EDD5CC;border-radius:6px;font-size:11px;background:#fff;outline:none"/><button class="btn-sm btn-save" onclick="pdAddCustomTag()">Add</button></div>';
+
+    panelHtml='<div class="panel">'+linksHtml+imgsHtml+notesHtml+costHtml+tgHtml
+      +'<div class="panel-row"><button class="btn-sm btn-save" onclick="savePanel(\''+k+'\')">Save</button><button class="btn-sm btn-cancel" onclick="closePanel()">Cancel</button><button class="btn-sm btn-clear" onclick="clearPanel(\''+k+'\')">Clear all</button></div>'
+      +"</div>";
+  }
+
+  // Tag picker (quick, outside panel)
+  var tagPickHtml="";
+  if(isTags&&!isOpen){
+    tagPickHtml='<div class="panel">'
+      +'<div class="panel-title">🏷️ TAGS</div>'
+      +'<div class="tag-grid">'+ALL_TAGS.map(function(t){var sel=m.tags.indexOf(t.id)>=0;return'<button class="tpill'+(sel?" on":"")+'" style="'+(sel?"border-color:"+t.tc+";background:"+t.bg+";color:"+t.tc:"")+'" onclick="togItemTag(\''+k+'\',\''+t.id+'\')">'+t.emoji+" "+t.label+"</button>";}).join("")+"</div>"
+      +"</div>";
+  }
+
+  return'<div class="item'+(isDone?" done":"")+'">'
+    +'<div class="item-row">'
+      +delBtn
+      +'<div class="chk'+(isDone?" on":"")+'" onclick="togCheck(\''+k+'\')">'+( isDone?"✓":"")+"</div>"
+      +'<div class="item-main">'
+        +(showRoom?'<span style="font-size:10px;color:#8A5A62;margin-right:4px">['+h(room.label)+"]</span>":"")
+        +'<span class="item-name'+(isDone?" done":"")+'">' +h(name)+"</span>"+costBadge
+      +"</div>"
+      +'<div class="item-btns">'+tagBtn+attBtn+"</div>"
+    +"</div>"
+    +prevHtml
+    +panelHtml+tagPickHtml
+  +"</div>";
+}
+
+// ─── ACTIONS ─────────────────────────────────────────────────────────────────
+function togCheck(k){checked[k]=!checked[k];queueSave();render();}
+function setRoom(id){activeRoom=id;openPanel=null;tagPickerKey=null;render();}
+function setView(v){viewMode=v;activeTag=null;searchQ="";render();}
+function setTag(id){activeTag=activeTag===id?null:id;render();}
+function setSearch(v){searchQ=v;render();}
+function toggleEdit(){editMode=!editMode;confirmDelKey=null;tagPickerKey=null;openPanel=null;render();}
+function setConf(k){confirmDelKey=k;render();}
+
+function doDelete(rid,name){
+  var r=rooms.find(function(x){return x.id===rid;});
+  if(r){r.items=r.items.filter(function(n){return n!==name;});}
+  var k=mk(rid,name);
+  delete checked[k];delete meta[k];
+  confirmDelKey=null;queueSave();render();
+}
+
+function doAddItem(){
+  var inp=document.getElementById("addInput");
+  if(!inp)return;
+  var text=inp.value.trim();
+  if(!text)return;
+  var r=rooms.find(function(x){return x.id===activeRoom;});
+  if(!r)return;
+  if(r.items.indexOf(text)>=0){inp.value="";return;}
+  r.items.push(text);
+  var k=mk(activeRoom,text);
+  checked[k]=false;
+  meta[k]={tags:[],links:[],images:[],notes:"",cost:""};
+  queueSave();render();
+}
+
+function togPanel(k){
+  if(openPanel===k){openPanel=null;panelDraft=null;}
+  else{
+    var m=getMeta(k);
+    panelDraft={tags:m.tags.slice(),links:(m.links||[]).slice(),images:(m.images||[]).slice(),notes:m.notes||"",cost:m.cost||""};
+    openPanel=k;tagPickerKey=null;
+  }
+  render();
+}
+function closePanel(){openPanel=null;panelDraft=null;render();}
+function savePanel(k){
+  if(!panelDraft)return;
+  var m=getMeta(k);
+  m.tags=panelDraft.tags;m.links=panelDraft.links;m.images=panelDraft.images;m.notes=panelDraft.notes;m.cost=panelDraft.cost;
+  openPanel=null;panelDraft=null;queueSave();render();
+}
+function clearPanel(k){
+  meta[k]={tags:[],links:[],images:[],notes:"",cost:""};
+  openPanel=null;panelDraft=null;queueSave();render();
+}
+
+// Panel link editing
+var pd;// reference updated by render - we use panelDraft directly
+function pdLinkEdit(i,v){panelDraft.links[i]=v;}
+function pdLinkDel(i){panelDraft.links.splice(i,1);render();}
+function pdLinkAdd(){panelDraft.links.push("");render();}
+function pdImgDel(i){panelDraft.images.splice(i,1);render();}
+function pdTogTag(tid){var i=panelDraft.tags.indexOf(tid);if(i>=0)panelDraft.tags.splice(i,1);else panelDraft.tags.push(tid);render();}
+function pdAddCustomTag(){
+  var v=addTagInput.trim();
+  if(!v)return;
+  // Add to ALL_TAGS if not there
+  if(!ALL_TAGS.find(function(t){return t.label===v;})){
+    ALL_TAGS.push({id:"custom_"+v.toLowerCase().replace(/\s+/g,"_"),label:v,emoji:"🔖",tc:"#555",bg:"#eee"});
+  }
+  var t=ALL_TAGS.find(function(t){return t.label===v;});
+  if(t&&panelDraft.tags.indexOf(t.id)<0)panelDraft.tags.push(t.id);
+  addTagInput="";render();
+}
+
+function togTP(k){tagPickerKey=tagPickerKey===k?null:k;openPanel=null;render();}
+function togItemTag(k,tid){
+  var m=getMeta(k);var i=m.tags.indexOf(tid);
+  if(i>=0)m.tags.splice(i,1);else m.tags.push(tid);
+  queueSave();render();
+}
+
+// Image upload for items
+var currentImgKey=null;
+function triggerItemImgs(){
+  currentImgKey=openPanel;
+  document.getElementById("fi").click();
+}
+document.getElementById("fi").addEventListener("change",function(e){
+  var files=Array.from(e.target.files);
+  if(!files.length||!panelDraft)return;
+  var loaded=0;
+  files.forEach(function(f){
+    var rd=new FileReader();
+    rd.onload=function(ev){
+      // Compress before storing
+      compressImg(ev.target.result,function(compressed){
+        panelDraft.images.push(compressed);
+        loaded++;
+        if(loaded===files.length)render();
+      });
+    };
+    rd.readAsDataURL(f);
+  });
+  e.target.value="";
+});
+
+// Room image upload
+var currentRoomId=null;
+function triggerRoomImg(rid){currentRoomId=rid;document.getElementById("ri").click();}
+function setRoomImg(rid,val){roomImgs[rid]=val;queueSave();render();}
+document.getElementById("ri").addEventListener("change",function(e){
+  var f=e.target.files[0];if(!f)return;
+  var rd=new FileReader();
+  rd.onload=function(ev){
+    compressImg(ev.target.result,function(compressed){
+      roomImgs[currentRoomId]=compressed;
+      queueSave();render();
+    });
+  };
+  rd.readAsDataURL(f);
+  e.target.value="";
+});
+
+function compressImg(dataUrl,cb){
+  try{
+    var img=new Image();
+    img.onload=function(){
+      var MAX=800;
+      var w=img.width,wh=img.height;
+      if(w>MAX){wh=Math.round(wh*MAX/w);w=MAX;}
+      var canvas=document.createElement("canvas");
+      canvas.width=w;canvas.height=wh;
+      canvas.getContext("2d").drawImage(img,0,0,w,wh);
+      cb(canvas.toDataURL("image/jpeg",0.6));
+    };
+    img.onerror=function(){cb(dataUrl);};
+    img.src=dataUrl;
+  }catch(e){cb(dataUrl);}
+}
+
+// ─── BOOT ────────────────────────────────────────────────────────────────────
+try{loadState();}catch(e){try{initFresh();}catch(e2){}}
+try{render();}catch(e){
+  document.getElementById("app").innerHTML=
+    '<div style="padding:40px 20px;text-align:center">'
+    +'<div style="font-size:36px;margin-bottom:12px">⚠️</div>'
+    +'<div style="font-size:15px;font-weight:700;color:#C0392B">Something went wrong</div>'
+    +'<div style="font-size:13px;color:#8A5A62;margin:8px 0 20px">Tap below to reset and start fresh</div>'
+    +'<button onclick="localStorage.clear();location.reload()" style="padding:12px 24px;background:#C0392B;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700">Reset & Reload</button>'
+    +"</div>";
+}
+</script>
+</body>
+</html>
