@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="Apt Checklist"/>
+<title>Apartment Checklist</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,system-ui,sans-serif;background:#FDF6F0;color:#2A1015;min-height:100vh}
+button,input,textarea,select{font-family:inherit}
+/* ── Header ── */
+.hdr{background:linear-gradient(135deg,#6B1A2A,#9B2335,#C0392B);color:#fff;padding:16px}
+.hdr h1{font-size:19px;font-weight:800}
+.hdr-sub{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#F5A87B;margin-bottom:3px}
+.hdr-meta{font-size:11px;color:rgba(255,255,255,.6);margin-top:3px}
+.hdr-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.hdr-btns{display:flex;gap:6px;flex-shrink:0;align-items:center}
+.btn-hdr{padding:6px 11px;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;background:rgba(255,255,255,.15);color:#fff}
+.btn-hdr.on{background:#F5A87B;color:#6B1A2A}
+.prog-row{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.8);margin:12px 0 4px}
+.prog-pct{color:#F5A87B;font-weight:700}
+.prog-bar{background:rgba(255,255,255,.2);border-radius:99px;height:5px}
+.prog-fill{background:#F5A87B;height:100%;border-radius:99px;transition:width .3s}
+/* ── Cost bar ── */
+.cost-bar{background:#4A0E18;color:#F5A87B;font-size:11px;font-weight:700;padding:6px 16px;text-align:center;letter-spacing:.04em}
+/* ── View tabs ── */
+.vtabs{display:flex;background:#FAE8DC;border-bottom:1px solid #EDD5CC}
+.vtab{flex:1;padding:9px 0;border:none;background:transparent;font-size:12px;color:#8A5A62;border-bottom:2.5px solid transparent;cursor:pointer}
+.vtab.on{font-weight:700;color:#C0392B;border-bottom-color:#C0392B}
+/* ── Toolbar (search + sort + trip) ── */
+.toolbar{padding:7px 10px;background:#FAE8DC;border-bottom:1px solid #EDD5CC;display:flex;gap:6px;align-items:center}
+.toolbar input{flex:1;padding:7px 10px;border:1px solid #EDD5CC;border-radius:8px;font-size:13px;background:#fff;outline:none}
+.toolbar select{padding:7px 8px;border:1px solid #EDD5CC;border-radius:8px;font-size:11px;background:#fff;outline:none;color:#6B1A2A;font-weight:600;max-width:110px}
+.btn-trip{padding:6px 10px;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;background:#FAD4DC;color:#8A1A3A}
+.btn-trip.on{background:#C0392B;color:#fff}
+/* ── Scroll tabs ── */
+.scroll-tabs{display:flex;overflow-x:auto;padding:6px 10px;gap:5px;background:#FAE8DC;border-bottom:1px solid #EDD5CC;scrollbar-width:none;align-items:center}
+.scroll-tabs::-webkit-scrollbar{display:none}
+.stab{flex-shrink:0;padding:5px 11px;border-radius:99px;border:1px solid #EDD5CC;font-size:11px;cursor:pointer;white-space:nowrap;background:#fff;color:#8A5A62}
+.stab.on{background:#C0392B;color:#fff;font-weight:700;border-color:#C0392B}
+.stab .bdg{margin-left:4px;font-size:9px;font-weight:800;padding:1px 5px;border-radius:99px;background:rgba(255,255,255,.25);color:#fff}
+.stab:not(.on) .bdg{background:#FAE8DC;color:#C0392B}
+/* ── Location tabs ── */
+.loc-tabs{display:flex;overflow-x:auto;padding:5px 10px;gap:5px;background:#FDF0F5;border-bottom:1px solid #EDD5CC;scrollbar-width:none}
+.loc-tabs::-webkit-scrollbar{display:none}
+.ltab{flex-shrink:0;padding:4px 10px;border-radius:99px;border:1px solid #F0C0D0;font-size:11px;cursor:pointer;white-space:nowrap;background:#fff;color:#8A3A5A}
+.ltab.on{background:#E8798A;color:#fff;font-weight:700;border-color:#E8798A}
+/* ── Edit banner ── */
+.edit-banner{background:#FFF0F5;border-bottom:1px solid #F5C8D8;padding:6px 12px;font-size:11px;color:#8A1A3A}
+/* ── List ── */
+.list{padding:10px 12px 80px}
+.list-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.list-hdr h2{font-size:15px;font-weight:800}
+.list-cnt{font-size:11px;color:#8A5A62}
+/* ── Room image ── */
+.room-img-wrap{margin-bottom:10px;border-radius:10px;overflow:hidden;border:1px solid #EDD5CC;background:#FAE8DC}
+.room-img-wrap img{width:100%;display:block;max-height:200px;object-fit:cover}
+.btn-room-img{margin:0 0 10px;width:100%;padding:8px;border:1.5px dashed #EDD5CC;border-radius:8px;background:transparent;color:#8A5A62;font-size:12px;cursor:pointer}
+/* ── Item card ── */
+.item{background:#fff;border:1px solid #EDD5CC;border-radius:11px;padding:10px 11px;margin-bottom:6px;transition:background .2s}
+.item.s-own{background:#F0FBF4;border-color:#A8D8B8}
+.item.s-delivered{background:#FFF8F0;border-color:#F5C8A0}
+.item.s-ordered{background:#F5F0FF;border-color:#C8B8F0}
+.item.confirm-del{background:#FFF0F0;border-color:#F5C6C6}
+.item-row{display:flex;align-items:center;gap:7px}
+/* ── Status pill (replaces checkbox) ── */
+.status-pill{flex-shrink:0;padding:4px 9px;border-radius:99px;border:none;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap}
+.sp-need{background:#FFE8EE;color:#C0392B}
+.sp-ordered{background:#EDE8FF;color:#6A3ABF}
+.sp-delivered{background:#FFF3E0;color:#C07020}
+.sp-own{background:#E8F8EE;color:#1A8A3A}
+.item-main{flex:1;min-width:0}
+.item-name{font-size:13px;font-weight:500}
+.item-name.own{text-decoration:line-through;color:#8A5A62}
+.item-meta-row{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px;align-items:center}
+.itag{font-size:10px;padding:2px 6px;border-radius:99px;font-weight:600}
+.iloc{font-size:10px;padding:2px 6px;border-radius:99px;font-weight:600;background:#FDE8F0;color:#8A1A3A}
+.icost{font-size:10px;padding:2px 6px;border-radius:99px;font-weight:600;background:#E8F5E8;color:#1A6A1A}
+.item-btns{display:flex;gap:4px;flex-shrink:0}
+.ib{border:none;border-radius:6px;padding:4px 7px;font-size:13px;cursor:pointer;background:#F5F0EE;color:#8A5A62}
+.ib.on{background:#FAD4DC;color:#C0392B}
+/* ── Panel ── */
+.panel{margin-top:8px;padding:11px;background:#FDF0F5;border-radius:10px;border:1px solid #F0C8D8;display:flex;flex-direction:column;gap:8px}
+.panel-title{font-size:10px;font-weight:800;color:#8A1A3A;letter-spacing:.07em;text-transform:uppercase}
+.panel input,.panel textarea,.panel select{width:100%;padding:6px 9px;border:1px solid #EDD5CC;border-radius:7px;font-size:12px;background:#fff;outline:none;color:#2A1015}
+.panel textarea{resize:vertical;min-height:56px}
+.price-row{display:flex;gap:6px;align-items:center}
+.price-row input{flex:1}
+.price-sep{font-size:12px;color:#8A5A62;flex-shrink:0}
+.panel-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+/* ── Buttons ── */
+.btn-sm{padding:5px 10px;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer}
+.btn-pink{background:#F5A0B8;color:#6B1A2A}
+.btn-rose{background:#E8798A;color:#fff}
+.btn-save{background:#C0392B;color:#fff}
+.btn-cancel{background:#EDD5CC;color:#6B1A2A}
+.btn-clear{background:#FFE8EE;color:#C0392B}
+.btn-del{background:#FFE8EE;color:#C0392B;font-size:10px;padding:3px 7px}
+/* ── Link / image items ── */
+.link-row{display:flex;gap:5px;align-items:center;margin-bottom:4px}
+.link-row input{flex:1;min-width:0;padding:5px 8px;border:1px solid #EDD5CC;border-radius:6px;font-size:11px;background:#fff;outline:none}
+.img-grid{display:flex;flex-wrap:wrap;gap:5px}
+.img-thumb{position:relative;width:68px;height:56px}
+.img-thumb img{width:100%;height:100%;object-fit:cover;border-radius:6px;border:1px solid #EDD5CC}
+.img-del{position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:99px;background:#C0392B;color:#fff;border:none;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+/* ── Tag picker ── */
+.tpill-grid{display:flex;flex-wrap:wrap;gap:5px}
+.tpill{padding:4px 9px;border-radius:99px;border:1.5px solid #EDD5CC;background:#fff;color:#8A5A62;font-size:11px;cursor:pointer}
+.tpill.on{font-weight:700}
+/* ── Location picker ── */
+.loc-pill-grid{display:flex;flex-wrap:wrap;gap:5px}
+.lpill{padding:4px 9px;border-radius:99px;border:1.5px solid #F0C0D0;background:#fff;color:#8A3A5A;font-size:11px;cursor:pointer}
+.lpill.on{font-weight:700;background:#FDE8F0;border-color:#E8798A;color:#8A1A3A}
+/* ── Confirm ── */
+.confirm-row{display:flex;align-items:center;gap:7px}
+.confirm-txt{flex:1;font-size:12px;color:#9B1B1B}
+/* ── Add item ── */
+.add-row{display:flex;gap:7px;margin-top:8px}
+.add-input{flex:1;padding:9px 11px;border-radius:9px;border:1.5px dashed #E8798A;font-size:13px;outline:none;background:#fff}
+.btn-add-item{padding:9px 14px;background:#C0392B;color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer}
+.btn-show-edit{width:100%;margin-top:8px;padding:9px;border-radius:9px;border:1.5px dashed #EDD5CC;background:transparent;color:#8A5A62;font-size:12px;cursor:pointer}
+/* ── Previews ── */
+.prev-imgs{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;padding-left:4px}
+.prev-img{width:60px;height:48px;object-fit:cover;border-radius:6px;border:1px solid #EDD5CC}
+.prev-links{margin-top:3px;display:flex;flex-direction:column;gap:2px}
+.prev-link{font-size:11px;color:#C0392B;word-break:break-all}
+.prev-note{margin-top:3px;font-size:11px;color:#8A5A62;font-style:italic}
+/* ── Add room input ── */
+.add-room-bar{padding:7px 10px;background:#FDF0F5;border-bottom:1px solid #F0C8D8;display:flex;gap:6px;align-items:center}
+.add-room-bar input{padding:6px 9px;border:1px solid #EDD5CC;border-radius:7px;font-size:13px;background:#fff;outline:none}
+.del-room-bar{padding:7px 10px;background:#FFF0F0;border-bottom:1px solid #F5C6C6;display:flex;align-items:center;gap:8px}
+/* ── Empty / toast ── */
+.empty{text-align:center;padding:24px 0;color:#8A5A62;font-size:13px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#4A0E18;color:#F5A87B;padding:7px 16px;border-radius:99px;font-size:12px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* ── Drag to reorder ── */
+.item.dragging{opacity:.4;border:2px dashed #E8798A}
+.item.drag-over{border-top:3px solid #C0392B}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast" class="toast">✓ Saved</div>
+<input type="file" id="fi" accept="image/*" style="display:none" multiple/>
+<input type="file" id="ri" accept="image/*" style="display:none"/>
+<script>
+// ── SUPABASE CONFIG ──────────────────────────────────────────────────────────
+var SB_URL = 'https://xbluaxpnkpnrsppgjmds.supabase.co';
+var SB_KEY = 'sb_publishable_MOydMnQbfgbp3TQ0II7wDQ_MTzAWHTT';
+
+var SB_HEADERS = {
+  'apikey': SB_KEY,
+  'Authorization': 'Bearer ' + SB_KEY,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=minimal'
+};
+
+async function sbSave(payload) {
+  try {
+    // Try PATCH first (update existing row)
+    var res = await fetch(SB_URL + '/rest/v1/checklist?id=eq.main', {
+      method: 'PATCH',
+      headers: SB_HEADERS,
+      body: JSON.stringify({ data: payload, updated_at: new Date().toISOString() })
+    });
+    if (res.ok) return true;
+    // If PATCH fails (no row yet), try UPSERT
+    var res2 = await fetch(SB_URL + '/rest/v1/checklist', {
+      method: 'POST',
+      headers: Object.assign({}, SB_HEADERS, {'Prefer': 'resolution=merge-duplicates,return=minimal'}),
+      body: JSON.stringify({ id: 'main', data: payload, updated_at: new Date().toISOString() })
+    });
+    return res2.ok;
+  } catch(e) { console.warn('Supabase save failed:', e); return false; }
+}
+
+async function sbLoad() {
+  try {
+    var res = await fetch(SB_URL + '/rest/v1/checklist?id=eq.main&select=data', {
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!res.ok) {
+      console.warn('Supabase load HTTP error:', res.status, res.statusText);
+      return null;
+    }
+    var rows = await res.json();
+    if (rows && rows[0] && rows[0].data) return rows[0].data;
+    return null;
+  } catch(e) { console.warn('Supabase load failed:', e); return null; }
+}
+
+// ── DEFAULT ROOMS ────────────────────────────────────────────────────────────
+var DR=[
+  {id:"kitchen",label:"Kitchen",emoji:"🍳",items:["Refrigerator","Microwave","Toaster or toaster oven","Coffee maker / espresso machine","Kettle","Blender","Knife set + block","Cutting boards (2)","Non-stick skillet","Saucepan (2-3 qt)","Large pot (pasta)","Sheet pan + roasting pan","Mixing bowls","Measuring cups + spoons","Colander","Spatulas, tongs, wooden spoons","Can opener","Dish drying rack","Dish soap + sponges","Paper towel holder","Trash can + recycling bin","Storage containers","Dish towels (4-6)","Pot holders / oven mitts","Under-cabinet lighting","Counter herb garden"]},
+  {id:"dining",label:"Dining Room",emoji:"🪑",items:["Dining table (seats 4)","Dining chairs (4)","Dinner plates (set of 4-6)","Bowls (set of 4-6)","Glasses — water + wine","Mugs (4)","Flatware set","Serving bowls / platters","Placemats or table runner","Dining area rug","Pendant light or chandelier","Wall art or mirror","Sideboard or buffet"]},
+  {id:"living",label:"Living Room",emoji:"🛋️",items:["Sofa","Coffee table","Side table(s)","TV stand / media console","TV (55-65\")","Bookshelf","Area rug (8x10 ft)","Floor lamp","Table lamp(s)","Throw pillows (4-6)","Throw blanket","Wall art","Curtains + rod","Streaming device","Extension cords + power strips","Plants (1-2)"]},
+  {id:"office",label:"Home Office",emoji:"💻",items:["Standing desk (electric)","Ergonomic desk chair","Walking pad / treadmill","Whiteboard","Whiteboard markers + eraser","Monitor","Monitor arm","Laptop stand","Keyboard + mouse","USB hub / dock","Desk lamp","Cable management","Desk organizer","Printer (optional)","Bookcase","Anti-fatigue mat","Headphones","Webcam"]},
+  {id:"bedroom",label:"Bedroom",emoji:"🛏️",items:["Bed frame (queen or king)","Mattress","Platform base / box spring","Mattress protector","Pillows (2-4)","Pillow protectors","Sheet sets (2-3)","Duvet + cover","Comforter or quilt","Nightstand(s)","Dresser","Full-length mirror","Bedside lamp(s)","Bedside rug","Blackout curtains + rod","Alarm clock","Hangers (20-30)","Laundry hamper","Wall art"]},
+  {id:"bathroom",label:"Bathroom",emoji:"🚿",items:["Shower curtain + liner + rings","Shower caddy","Bath mat (2)","Towels — bath, hand, washcloth","Towel hooks or bar","Toilet brush + holder","Toilet paper holder","Toilet paper (stock up!)","Hand soap dispenser","Toothbrush holder","Wall mirror / medicine cabinet","Over-toilet shelving","Hair dryer","Scale","Trash can","Candle or diffuser","Extra toilet paper storage"]},
+  {id:"closet",label:"Closet",emoji:"👔",items:["Closet organizer system","Extra hanging rod","Shoe rack / cubbies","Shelf dividers","Velvet hangers (30-50)","Specialty hangers","Drawer organizer inserts","Storage bins / baskets","Door hooks","Over-door organizer","Vacuum storage bags","Lint roller","Cedar blocks"]},
+  {id:"laundry",label:"Laundry",emoji:"🧺",items:["Washing machine (check if in-unit)","Dryer (check if in-unit)","Laundry detergent","Fabric softener / dryer sheets","Laundry baskets (2)","Mesh laundry bags","Stain remover","Drying rack (for delicates)","Iron + ironing board","Garment steamer","Lint trap brush","Washing machine cleaner tablets"]},
+  {id:"personalcare",label:"Personal Care",emoji:"💆",items:["Skincare — cleanser","Skincare — moisturizer","Skincare — SPF","Skincare — serums / treatments","Makeup organizer","Makeup brushes + tools","Perfume / cologne","Body lotion","Deodorant (stock)","Razors + shaving supplies","Nail care kit","Hair tools (straightener / curler)","Hair products","First aid kit","Vitamins / supplements organizer","Medication organizer","Cotton pads + swabs","Period supplies","Tweezers / grooming kit"]},
+  {id:"clothes",label:"Clothes & Wardrobe",emoji:"👗",items:["Everyday tops","Blouses / shirts (work)","Jeans","Trousers / dress pants","Dresses","Skirts","Shorts","Sweaters / knitwear","Hoodies / sweatshirts","Blazers / jackets","Winter coat","Rain jacket","Athleisure set","Pajamas (2-3 sets)","Underwear (7-10 pairs)","Bras (3-5)","Socks (2 weeks worth)","Casual shoes / sneakers","Heels / dress shoes","Boots","Sandals","Winter boots","Sunglasses","Hats","Bags / totes","Belts","Jewelry organizer"]},
+  {id:"workout",label:"Workout & Fitness",emoji:"🏋️",items:["Yoga mat","Resistance bands (set)","Dumbbells (light + heavy)","Foam roller","Jump rope","Workout mirror (optional)","Pull-up bar (door mount)","Gym bag","Water bottle (insulated)","Workout clothes (5 sets)","Sports bras (3-5)","Running shoes","Workout gloves","Protein / supplements","Gym membership or app subscription","Fitness tracker / Apple Watch","Bluetooth speaker for workouts"]},
+  {id:"general",label:"General",emoji:"🏠",items:["Tool kit (hammer, screwdrivers, level)","Stud finder","Command hooks + strips","Picture hanging hardware","Mop, broom, dustpan","Vacuum cleaner","Cleaning caddy","All-purpose cleaner","Glass cleaner","Step stool / ladder","Fire extinguisher","Smoke + CO detectors","Flashlight + batteries","Door mat (entry)","Key hooks by door","Wi-Fi router / modem","Smart home devices (optional)","Moving boxes / storage"]}
+];
+
+var ALL_TAGS=[
+  {id:"furniture",label:"Furniture",emoji:"🛋️",tc:"#6B1A2A",bg:"#FAE8DC"},
+  {id:"organization",label:"Organization",emoji:"🗂️",tc:"#9B2335",bg:"#FDECEA"},
+  {id:"tools",label:"Tools",emoji:"🔧",tc:"#8B3A1A",bg:"#FAE8D4"},
+  {id:"beauty",label:"Beauty",emoji:"💄",tc:"#A0205A",bg:"#FFE8F2"},
+  {id:"decor",label:"Decor",emoji:"🖼️",tc:"#C05030",bg:"#FEF0E6"},
+  {id:"kitchen",label:"Kitchen",emoji:"🍳",tc:"#C04010",bg:"#FDEEE5"},
+  {id:"tech",label:"Tech",emoji:"💻",tc:"#6A1A5A",bg:"#F8E8F8"},
+  {id:"linens",label:"Linens",emoji:"🛏️",tc:"#A0405A",bg:"#FFE8EE"},
+  {id:"lighting",label:"Lighting",emoji:"💡",tc:"#B06020",bg:"#FEF8E0"},
+  {id:"cleaning",label:"Cleaning",emoji:"🧹",tc:"#805030",bg:"#FAE8E4"},
+  {id:"safety",label:"Safety",emoji:"🔒",tc:"#6A1A1A",bg:"#FAE8E8"},
+  {id:"clothing",label:"Clothing",emoji:"👗",tc:"#6A2A7A",bg:"#F5E8FF"},
+  {id:"fitness",label:"Fitness",emoji:"🏋️",tc:"#1A6A4A",bg:"#E8FFF5"},
+  {id:"selfcare",label:"Self Care",emoji:"💆",tc:"#4A2A8A",bg:"#F0E8FF"},
+  {id:"priority",label:"Priority",emoji:"⭐",tc:"#8A5A00",bg:"#FFF8E0"},
+  {id:"splurge",label:"Splurge",emoji:"💸",tc:"#8A0A3A",bg:"#FFE8F0"},
+  {id:"budget",label:"Budget Find",emoji:"💰",tc:"#0A5A1A",bg:"#E8FFE8"},
+];
+
+// ── STATUS DEFINITIONS ───────────────────────────────────────────────────────
+var STATUSES=[
+  {id:"need",    label:"Need",      cls:"sp-need",      next:"ordered"},
+  {id:"ordered", label:"Ordered",   cls:"sp-ordered",   next:"delivered"},
+  {id:"delivered",label:"Delivered",cls:"sp-delivered", next:"own"},
+  {id:"own",     label:"Own ✓",     cls:"sp-own",       next:"need"},
+];
+function nextStatus(s){var st=STATUSES.find(function(x){return x.id===s;});return st?st.next:"need";}
+function statusObj(s){return STATUSES.find(function(x){return x.id===s;})||STATUSES[0];}
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+var rooms,itemStatus,meta,roomImgs,locations;
+var viewMode,activeRoom,activeTag,activeLoc,searchQ,sortBy,tripMode;
+var editMode,openPanel,panelDraft,confirmDelKey,tagPickerKey;
+var addingRoom,confirmDelRoomId;
+var saveTimer=null,toastTimer=null;
+var LSKEY="aptchk_v4";
+
+function initFresh(){
+  rooms=DR.map(function(r){return{id:r.id,label:r.label,emoji:r.emoji,items:r.items.slice()};});
+  itemStatus={};meta={};roomImgs={};locations=["Philadelphia, PA","Sarasota, FL","Fort Lee, NJ"];
+  rooms.forEach(function(r){r.items.forEach(function(n){
+    var k=r.id+"::"+n;
+    itemStatus[k]="need";
+    meta[k]={tags:[],links:[],images:[],notes:"",priceMin:"",priceMax:"",location:""};
+  });});
+  viewMode="room";activeRoom="kitchen";activeTag=null;activeLoc=null;searchQ="";sortBy="default";tripMode=false;
+  editMode=false;openPanel=null;panelDraft=null;confirmDelKey=null;tagPickerKey=null;
+  addingRoom=false;confirmDelRoomId=null;
+}
+
+// ── SAVE / LOAD ───────────────────────────────────────────────────────────────
+function buildPayload(){
+  var imgMap={},roomImgMap={};
+  Object.keys(meta).forEach(function(k){if(meta[k].images&&meta[k].images.length)imgMap[k]=meta[k].images;});
+  Object.keys(roomImgs).forEach(function(rid){if(roomImgs[rid])roomImgMap[rid]=roomImgs[rid];});
+  var metaNoImg={};
+  Object.keys(meta).forEach(function(k){metaNoImg[k]={tags:meta[k].tags,links:meta[k].links,notes:meta[k].notes,priceMin:meta[k].priceMin,priceMax:meta[k].priceMax,location:meta[k].location};});
+  return{rooms:rooms,status:itemStatus,meta:metaNoImg,locations:locations,images:imgMap,roomImages:roomImgMap};
+}
+
+function saveLocal(payload){
+  try{
+    var p=Object.assign({},payload);
+    delete p.images; delete p.roomImages;
+    localStorage.setItem(LSKEY,JSON.stringify(p));
+    try{localStorage.setItem(LSKEY+"_imgs",JSON.stringify(payload.images||{}));}catch(e){}
+    try{localStorage.setItem(LSKEY+"_ri",JSON.stringify(payload.roomImages||{}));}catch(e){}
+  }catch(e){}
+}
+
+function saveState(silent){
+  var payload=buildPayload();
+  // Always save to localStorage as instant backup
+  saveLocal(payload);
+  // Save to Supabase (async, cloud)
+  sbSave(payload).then(function(ok){
+    if(!silent)showToast(ok?"✓ Saved to cloud":"✓ Saved locally");
+  });
+}
+
+function applyData(d){
+  rooms=d.rooms||DR.map(function(r){return{id:r.id,label:r.label,emoji:r.emoji,items:r.items.slice()};});
+  itemStatus=d.status||{};
+  meta=d.meta||{};
+  locations=d.locations||["Philadelphia, PA","Sarasota, FL","Fort Lee, NJ"];
+  roomImgs={};
+  // Restore images
+  var imgs=d.images||{};
+  var ri=d.roomImages||{};
+  rooms.forEach(function(r){
+    roomImgs[r.id]=ri[r.id]||null;
+    r.items.forEach(function(n){
+      var k=r.id+"::"+n;
+      if(!itemStatus[k])itemStatus[k]="need";
+      if(!meta[k])meta[k]={tags:[],links:[],images:[],notes:"",priceMin:"",priceMax:"",location:""};
+      meta[k].images=imgs[k]||meta[k].images||[];
+      if(!meta[k].links)meta[k].links=[];
+      if(!meta[k].tags)meta[k].tags=[];
+      if(meta[k].priceMin===undefined)meta[k].priceMin="";
+      if(meta[k].priceMax===undefined)meta[k].priceMax="";
+      if(meta[k].location===undefined)meta[k].location="";
+    });
+  });
+  viewMode="room";activeRoom=rooms[0]?rooms[0].id:"kitchen";
+  activeTag=null;activeLoc=null;searchQ="";sortBy="default";tripMode=false;
+  editMode=false;openPanel=null;panelDraft=null;confirmDelKey=null;tagPickerKey=null;
+  addingRoom=false;confirmDelRoomId=null;
+}
+
+function loadFromLocal(){
+  var raw=localStorage.getItem(LSKEY);
+  if(!raw)return null;
+  var d=JSON.parse(raw);
+  try{d.images=JSON.parse(localStorage.getItem(LSKEY+"_imgs")||"{}");}catch(e){d.images={};}
+  try{d.roomImages=JSON.parse(localStorage.getItem(LSKEY+"_ri")||"{}");}catch(e){d.roomImages={};}
+  return d;
+}
+
+function loadState(){
+  // Show loading indicator
+  document.getElementById("app").innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#FDF6F0;flex-direction:column;gap:12px"><div style="font-size:32px">🌸</div><div style="font-size:14px;color:#8A5A62">Loading your checklist…</div></div>';
+  // Try Supabase first
+  sbLoad().then(function(cloudData){
+    try{
+      if(cloudData&&cloudData.rooms){
+        applyData(cloudData);
+      } else {
+        // Fall back to localStorage
+        var local=loadFromLocal();
+        if(local){applyData(local);}
+        else{initFresh();}
+      }
+    }catch(e){
+      try{var local=loadFromLocal();if(local){applyData(local);}else{initFresh();}}catch(e2){initFresh();}
+    }
+    render();
+  }).catch(function(){
+    // Offline - use localStorage
+    try{
+      var local=loadFromLocal();
+      if(local){applyData(local);}else{initFresh();}
+    }catch(e){initFresh();}
+    render();
+  });
+  return; // render called async above
+}
+
+function _oldLoadState_unused(){
+  try{
+    var raw=localStorage.getItem(LSKEY);
+    if(!raw){initFresh();return;}
+    var d=JSON.parse(raw);
+    rooms=d.rooms||DR.map(function(r){return{id:r.id,label:r.label,emoji:r.emoji,items:r.items.slice()};});
+    itemStatus=d.status||{};
+    meta=d.meta||{};
+    locations=d.locations||["Philadelphia, PA","Sarasota, FL","Fort Lee, NJ"];
+    roomImgs={};
+    rooms.forEach(function(r){r.items.forEach(function(n){
+      var k=r.id+"::"+n;
+      if(!itemStatus[k])itemStatus[k]="need";
+      if(!meta[k])meta[k]={tags:[],links:[],images:[],notes:"",priceMin:"",priceMax:"",location:""};
+      if(!meta[k].images)meta[k].images=[];
+      if(!meta[k].links)meta[k].links=[];
+      if(!meta[k].tags)meta[k].tags=[];
+      if(meta[k].priceMin===undefined)meta[k].priceMin="";
+      if(meta[k].priceMax===undefined)meta[k].priceMax="";
+      if(meta[k].location===undefined)meta[k].location="";
+    });});
+    try{var imgs=JSON.parse(localStorage.getItem(LSKEY+"_imgs")||"{}");Object.keys(imgs).forEach(function(k){if(meta[k])meta[k].images=imgs[k]||[];});}catch(e){}
+    try{var ri=JSON.parse(localStorage.getItem(LSKEY+"_ri")||"{}");rooms.forEach(function(r){roomImgs[r.id]=ri[r.id]||null;});}catch(e){}
+    viewMode=d.viewMode||"room";activeRoom=d.activeRoom||rooms[0].id;
+    activeTag=null;activeLoc=null;searchQ="";sortBy="default";tripMode=false;
+    editMode=false;openPanel=null;panelDraft=null;confirmDelKey=null;tagPickerKey=null;
+    addingRoom=false;confirmDelRoomId=null;
+  }catch(e){initFresh();}
+}
+
+function queueSave(){
+  // Save immediately (silent) so iOS PWA never loses data
+  saveState(true);
+  // Delayed save shows toast confirmation
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(function(){saveState(false);},1000);
+}
+function showToast(msg){var t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.classList.remove("show");},2200);}
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+function mk(rid,n){return rid+"::"+n;}
+function h(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function gm(k){return meta[k]||(meta[k]={tags:[],links:[],images:[],notes:"",priceMin:"",priceMax:"",location:""});}
+function allKeys(){return rooms.flatMap(function(r){return r.items.map(function(n){return mk(r.id,n);});});}
+function ownCnt(){return allKeys().filter(function(k){return itemStatus[k]==="own";}).length;}
+function totalCnt(){return allKeys().length;}
+function pct(){var t=totalCnt();return t>0?Math.round(ownCnt()/t*100):0;}
+function roomOwn(r){return r.items.filter(function(n){return itemStatus[mk(r.id,n)]==="own";}).length;}
+function curRoom(){return rooms.find(function(r){return r.id===activeRoom;})||rooms[0];}
+
+function costOf(k){
+  var m=gm(k);
+  var mn=parseFloat((m.priceMin||"").replace(/[^0-9.]/g,""));
+  var mx=parseFloat((m.priceMax||"").replace(/[^0-9.]/g,""));
+  if(!isNaN(mx))return mx;
+  if(!isNaN(mn))return mn;
+  return 0;
+}
+function totalBudget(){var t=0;allKeys().forEach(function(k){t+=costOf(k);});return t.toFixed(2);}
+function totalOwned(){var t=0;allKeys().forEach(function(k){if(itemStatus[k]==="own")t+=costOf(k);});return t.toFixed(2);}
+
+function tagCount(tid){
+  var cnt=0,own=0;
+  rooms.forEach(function(r){r.items.forEach(function(n){var k=mk(r.id,n),m=gm(k);if(m.tags.indexOf(tid)>=0){cnt++;if(itemStatus[k]==="own")own++;}});});
+  return{cnt:cnt,own:own};
+}
+
+function getDisplayed(){
+  var flat=[];
+  rooms.forEach(function(r){r.items.forEach(function(n){flat.push({room:r,name:n,key:mk(r.id,n)});});});
+  // Trip mode: only show items not yet owned
+  if(tripMode)flat=flat.filter(function(x){return itemStatus[x.key]!=="own";});
+  // Location filter
+  if(activeLoc)flat=flat.filter(function(x){return gm(x.key).location===activeLoc;});
+  // Search
+  if(searchQ.trim()){var q=searchQ.toLowerCase();flat=flat.filter(function(x){return x.name.toLowerCase().indexOf(q)>=0;});}
+  else if(viewMode==="room"&&!activeLoc)flat=flat.filter(function(x){return x.room.id===activeRoom;});
+  else if(viewMode==="tag"&&activeTag&&!activeLoc)flat=flat.filter(function(x){return gm(x.key).tags.indexOf(activeTag)>=0;});
+  else if(viewMode==="tag"&&!activeTag&&!activeLoc)flat=[];
+  // Sort
+  if(sortBy==="status"){flat.sort(function(a,b){var so=["need","ordered","delivered","own"];return so.indexOf(itemStatus[a.key])-so.indexOf(itemStatus[b.key]);});}
+  else if(sortBy==="cost-lo"){flat.sort(function(a,b){return costOf(a.key)-costOf(b.key);});}
+  else if(sortBy==="cost-hi"){flat.sort(function(a,b){return costOf(b.key)-costOf(a.key);});}
+  else if(sortBy==="tag"){flat.sort(function(a,b){var ta=(gm(a.key).tags[0]||"zzz"),tb=(gm(b.key).tags[0]||"zzz");return ta.localeCompare(tb);});}
+  else if(sortBy==="location"){flat.sort(function(a,b){return(gm(a.key).location||"zzz").localeCompare(gm(b.key).location||"zzz");});}
+  return flat;
+}
+
+// ── RENDER ───────────────────────────────────────────────────────────────────
+function render(){
+  var p=pct(),oc=ownCnt(),tc=totalCnt(),cr=curRoom(),disp=getDisplayed();
+  var tBudget=totalBudget(),tOwned=totalOwned();
+
+  // ── Room tabs
+  var roomTabsHtml="";
+  if(!searchQ&&viewMode==="room"&&!activeLoc){
+    var tabBtns=rooms.map(function(r){
+      var d=roomOwn(r),a=r.id===activeRoom;
+      var badge=r.items.length>0?'<span class="bdg">'+d+"/"+r.items.length+"</span>":"";
+      var delX=editMode?'<span onclick="event.stopPropagation();confirmDelRoom(\''+r.id+'\')" style="margin-left:4px;opacity:.7;font-size:11px">✕</span>':"";
+      return'<button class="stab'+(a?" on":"")+'" onclick="setRoom(\''+r.id+'\')">'+r.emoji+" "+r.label+badge+delX+"</button>";
+    }).join("");
+    var addBtn=editMode?'<button class="stab" onclick="showAddRoom()" style="border-style:dashed;border-color:#E8798A;color:#C0392B">＋ Room</button>':"";
+    roomTabsHtml='<div class="scroll-tabs">'+tabBtns+addBtn+"</div>";
+    if(addingRoom){
+      roomTabsHtml+='<div class="add-room-bar">'
+        +'<input id="nre" placeholder="🏠" maxlength="2" style="width:38px;text-align:center;font-size:16px"/>'
+        +'<input id="nrn" placeholder="Room name…" style="flex:1" onkeydown="if(event.key===\'Enter\')doAddRoom()"/>'
+        +'<button class="btn-sm btn-save" onclick="doAddRoom()">Add</button>'
+        +'<button class="btn-sm btn-cancel" onclick="cancelAddRoom()">✕</button>'
+      +"</div>";
+    }
+    if(confirmDelRoomId){
+      var dro=rooms.find(function(r){return r.id===confirmDelRoomId;})||{};
+      roomTabsHtml+='<div class="del-room-bar">'
+        +'<span style="flex:1;font-size:12px;color:#9B1B1B">Delete <strong>'+h(dro.label||"")+'</strong> and all items?</span>'
+        +'<button class="btn-sm btn-save" onclick="doDelRoom(\''+confirmDelRoomId+'\')">Delete</button>'
+        +'<button class="btn-sm btn-cancel" onclick="cancelDelRoom()">Cancel</button>'
+      +"</div>";
+    }
+  }
+
+  // ── Tag tabs
+  var tagTabsHtml="";
+  if(!searchQ&&viewMode==="tag"&&!activeLoc){
+    tagTabsHtml='<div class="scroll-tabs">'+ALL_TAGS.map(function(t){
+      var i=tagCount(t.id),a=activeTag===t.id;
+      var badge=i.cnt>0?'<span class="bdg">'+i.own+"/"+i.cnt+"</span>":"";
+      return'<button class="stab'+(a?" on":"")+'" style="'+(a?"background:"+t.tc+";color:#fff;border-color:"+t.tc:"border-color:"+t.bg)+'" onclick="setTag(\''+t.id+'\')">'+t.emoji+" "+t.label+badge+"</button>";
+    }).join("")+"</div>";
+  }
+
+  // ── Location tabs (always visible when locations exist)
+  var locTabsHtml="";
+  if(locations.length>0){
+    locTabsHtml='<div class="loc-tabs">'
+      +'<button class="ltab'+(activeLoc===null?" on":"")+'" onclick="setLoc(null)">📍 All</button>'
+      +locations.map(function(loc){
+        var a=activeLoc===loc;
+        var cnt=allKeys().filter(function(k){return gm(k).location===loc;}).length;
+        return'<button class="ltab'+(a?" on":"")+'" onclick="setLoc(\''+h(loc)+'\')">'+h(loc)+(cnt>0?' <span style="font-size:9px;opacity:.7">'+cnt+"</span>":"")+"</button>";
+      }).join("")
+      +(editMode?'<button class="ltab" onclick="addLocation()" style="border-style:dashed;border-color:#E8798A;color:#C0392B">＋</button>':"")
+    +"</div>";
+  }
+
+  // ── List header
+  var listHdr="";
+  if(activeLoc){
+    listHdr='<div class="list-hdr"><h2>📍 '+h(activeLoc)+'</h2><span class="list-cnt">'+disp.length+" items"+(tripMode?" · shopping trip":"")+"</span></div>";
+  } else if(searchQ){
+    listHdr='<div class="list-hdr"><h2>Search</h2><span class="list-cnt">'+disp.length+" found</span></div>";
+  } else if(viewMode==="room"){
+    listHdr='<div class="list-hdr"><h2>'+cr.emoji+" "+h(cr.label)+'</h2><span class="list-cnt">'+roomOwn(cr)+"/"+cr.items.length+(tripMode?" · shopping trip":"")+"</span></div>";
+  } else if(viewMode==="tag"&&!activeTag){
+    listHdr='<div class="empty">👆 Select a tag above</div>';
+  } else if(viewMode==="tag"&&activeTag){
+    var tobj=ALL_TAGS.find(function(t){return t.id===activeTag;})||{};
+    listHdr='<div class="list-hdr"><h2>'+tobj.emoji+" "+h(tobj.label||"")+'</h2><span class="list-cnt">'+disp.length+" items</span></div>";
+  }
+
+  // ── Room image
+  var roomImgHtml="";
+  if(!searchQ&&viewMode==="room"&&!activeLoc){
+    var ri=roomImgs[activeRoom];
+    if(ri){
+      roomImgHtml='<div class="room-img-wrap"><img src="'+ri+'" alt="room"/>'
+        +'<div style="padding:5px 8px;display:flex;gap:6px">'
+        +'<button class="btn-sm btn-cancel" onclick="setRoomImg(\''+activeRoom+'\',null)" style="font-size:10px">Remove</button>'
+        +'<button class="btn-sm btn-save" onclick="triggerRoomImg(\''+activeRoom+'\')" style="font-size:10px">Replace</button>'
+        +"</div></div>";
+    } else {
+      roomImgHtml='<button class="btn-room-img" onclick="triggerRoomImg(\''+activeRoom+'\')">📷 Add room photo / mood board</button>';
+    }
+  }
+
+  // ── Items
+  var itemsHtml=disp.map(function(x){return renderItem(x.room,x.name,x.key);}).join("");
+  if(disp.length===0&&(viewMode==="room"||activeLoc||searchQ)){
+    itemsHtml='<div class="empty">'+(tripMode?"🎉 All items for this view are owned!":"No items found")+"</div>";
+  }
+
+  // ── Add item / edit button
+  var addHtml="";
+  if(!searchQ&&viewMode==="room"&&!activeLoc&&editMode){
+    addHtml='<div class="add-row"><input class="add-input" id="addInput" placeholder="Add item to '+h(cr.label)+'…" onkeydown="if(event.key===\'Enter\')doAddItem()"/><button class="btn-add-item" onclick="doAddItem()">Add</button></div>';
+  } else if(!searchQ&&viewMode==="room"&&!activeLoc&&!editMode){
+    addHtml='<button class="btn-show-edit" onclick="toggleEdit()">＋ Add or remove items</button>';
+  }
+
+  document.getElementById("app").innerHTML=
+    // Header
+    '<div class="hdr">'
+      +'<div class="hdr-sub">Chestnut Hall · Philadelphia</div>'
+      +'<div class="hdr-top">'
+        +'<div><h1>Apartment Checklist</h1><div class="hdr-meta">750 sq ft · 1BR/1BA · '+tc+' items</div></div>'
+        +'<div class="hdr-btns">'
+          +'<button class="btn-hdr'+(editMode?" on":"")+'" onclick="toggleEdit()">'+(editMode?"✓ Done":"✏️ Edit")+"</button>"
+        +"</div>"
+      +"</div>"
+      +'<div class="prog-row"><span>'+oc+" of "+tc+' owned</span><span class="prog-pct">'+p+"%</span></div>"
+      +'<div class="prog-bar"><div class="prog-fill" style="width:'+p+'%"></div></div>'
+    +"</div>"
+    // Cost bar
+    +'<div class="cost-bar">💰 Total budget: $'+tBudget+' &nbsp;·&nbsp; Owned: $'+tOwned+"</div>"
+    // View tabs
+    +'<div class="vtabs">'
+      +'<button class="vtab'+(viewMode==="room"?" on":"")+'" onclick="setView(\'room\')">🏠 By Room</button>'
+      +'<button class="vtab'+(viewMode==="tag"?" on":"")+'" onclick="setView(\'tag\')">🏷️ By Tag</button>'
+    +"</div>"
+    // Toolbar
+    +'<div class="toolbar">'
+      +'<input placeholder="Search…" value="'+h(searchQ)+'" oninput="setSearch(this.value)"/>'
+      +'<select onchange="setSort(this.value)">'
+        +'<option value="default"'+(sortBy==="default"?" selected":"")+'>Sort: Default</option>'
+        +'<option value="status"'+(sortBy==="status"?" selected":"")+'>Sort: Status</option>'
+        +'<option value="cost-lo"'+(sortBy==="cost-lo"?" selected":"")+'>Sort: $ Low→High</option>'
+        +'<option value="cost-hi"'+(sortBy==="cost-hi"?" selected":"")+'>Sort: $ High→Low</option>'
+        +'<option value="tag"'+(sortBy==="tag"?" selected":"")+'>Sort: Tag</option>'
+        +'<option value="location"'+(sortBy==="location"?" selected":"")+'>Sort: Location</option>'
+      +"</select>"
+      +'<button class="btn-trip'+(tripMode?" on":"")+'" onclick="setTrip(!tripMode)">🛍️ Trip</button>'
+    +"</div>"
+    // Location tabs
+    +locTabsHtml
+    // Room / tag tabs
+    +roomTabsHtml+tagTabsHtml
+    // Edit banner
+    +(editMode?'<div class="edit-banner">✏️ Edit — 🗑️ delete · ✕ room tab to remove · ＋ Room to add · drag items to reorder</div>':"")
+    // List
+    +'<div class="list">'+listHdr+roomImgHtml+itemsHtml+addHtml+"</div>";
+}
+
+function renderItem(room,name,k){
+  var st=itemStatus[k]||"need",m=gm(k);
+  var so=statusObj(st);
+  var isOpen=openPanel===k,isConf=confirmDelKey===k,isTags=tagPickerKey===k;
+  var hasLinks=m.links&&m.links.length>0,hasImgs=m.images&&m.images.length>0,hasNotes=!!m.notes;
+  var hasCost=!!(m.priceMin||m.priceMax),hasLoc=!!m.location;
+  var hasExtra=hasLinks||hasImgs||hasNotes||hasCost||hasLoc||m.tags.length>0;
+  var showRoom=!!(searchQ||activeLoc||(viewMode==="tag"));
+
+  if(isConf){
+    return'<div class="item confirm-del"><div class="confirm-row">'
+      +'<span class="confirm-txt">Remove <strong>"'+h(name)+'"</strong>?</span>'
+      +'<button class="btn-sm btn-save" onclick="doDelete(\''+h(room.id)+'\',\''+h(name).replace(/'/g,"&#39;")+'\')">Remove</button>'
+      +'<button class="btn-sm btn-cancel" onclick="setConf(null)">Cancel</button>'
+    +"</div></div>";
+  }
+
+  var tagPills=m.tags.map(function(tid){var t=ALL_TAGS.find(function(x){return x.id===tid;});return t?'<span class="itag" style="background:'+t.bg+';color:'+t.tc+'">'+t.emoji+t.label+"</span>":"";}).join("");
+  var locPill=hasLoc?'<span class="iloc">📍'+h(m.location)+"</span>":"";
+  var costPill="";
+  if(hasCost){
+    var cs=m.priceMin&&m.priceMax?"$"+h(m.priceMin)+"–$"+h(m.priceMax):m.priceMin?"$"+h(m.priceMin):m.priceMax?"$"+h(m.priceMax):"";
+    if(cs)costPill='<span class="icost">'+cs+"</span>";
+  }
+
+  var prevHtml="";
+  if(!isOpen&&!isTags&&hasExtra){
+    var pills="";
+    if(m.tags.length>0)pills+=tagPills;
+    if(locPill)pills+=locPill;
+    if(costPill)pills+=costPill;
+    if(pills)prevHtml+='<div class="item-meta-row">'+pills+"</div>";
+    if(hasLinks)prevHtml+='<div class="prev-links">'+m.links.filter(function(l){return l.trim();}).map(function(l){return'<a class="prev-link" href="'+(l.startsWith("http")?l:"https://"+l)+'" target="_blank">🔗 '+h(l.length>50?l.slice(0,50)+"…":l)+"</a>";}).join("")+"</div>";
+    if(hasImgs)prevHtml+='<div class="prev-imgs">'+m.images.map(function(s){return'<img class="prev-img" src="'+s+'" alt=""/>';}).join("")+"</div>";
+    if(hasNotes)prevHtml+='<div class="prev-note">📝 '+h(m.notes.length>80?m.notes.slice(0,80)+"…":m.notes)+"</div>";
+  }
+
+  var dragHandle=editMode?'<div class="drag-handle" data-k="'+k+'" data-rid="'+room.id+'" '+'draggable="true" ontouchstart="onTouchStart(event)" ontouchmove="onTouchMove(event)" '+'ontouchend="onTouchEnd(event)" ondragstart="onHandleDragStart(event)" ondragend="onHandleDragEnd(event)">≡</div>':"";
+  var delBtn=editMode?'<button class="ib" data-k="'+k+'" onclick="setConf(this.dataset.k)">🗑️</button>':""
+  var attBtn='<button class="ib'+(isOpen?" on":(hasExtra?" on":""))+'" data-k="'+k+'" onclick="togPanel(this.dataset.k)">📎</button>';
+
+  // ── Attachment panel
+  var panelHtml="";
+  if(isOpen&&panelDraft){
+    var pd=panelDraft;
+    var statusHtml='<div class="panel-title">📌 Status</div><div class="tpill-grid">'+STATUSES.map(function(s){var sel=pd.status===s.id;return'<button class="smopt '+s.cls+(sel?' sel-status':'')+'" data-sid="'+s.id+'" onclick="panelDraft.status=this.dataset.sid;render()" style="'+(sel?'outline:2.5px solid #6B1A2A;outline-offset:2px;':'')+'">'  +s.label+'</button>';}).join('')+'</div>';
+    var linksHtml='<div class="panel-title">🔗 Links</div>'
+      +(pd.links||[]).map(function(l,i){
+        return'<div class="link-row"><input value="'+h(l)+'" placeholder="https://…" oninput="panelDraft.links['+i+']=this.value"/><button class="btn-sm btn-del" onclick="pdLinkDel('+i+')">✕</button></div>';
+      }).join("")
+      +'<button class="btn-sm btn-pink" onclick="pdLinkAdd()">＋ Add link</button>';
+
+    var imgsHtml='<div class="panel-title">📷 Images</div>';
+    if(pd.images&&pd.images.length)imgsHtml+='<div class="img-grid">'+pd.images.map(function(s,i){return'<div class="img-thumb"><img src="'+s+'"/><button class="img-del" onclick="pdImgDel('+i+')">✕</button></div>';}).join("")+"</div>";
+    imgsHtml+='<button class="btn-sm btn-pink" onclick="triggerItemImgs()">＋ Add images</button>';
+
+    var notesHtml='<div class="panel-title">📝 Notes</div><textarea oninput="panelDraft.notes=this.value" placeholder="Notes, measurements, ideas…">'+h(pd.notes||"")+"</textarea>";
+
+    var priceHtml='<div class="panel-title">💰 Price Range</div>'
+      +'<div class="price-row">'
+        +'<input type="number" min="0" step="0.01" placeholder="Min $" value="'+h(pd.priceMin||"")+'" oninput="panelDraft.priceMin=this.value"/>'
+        +'<span class="price-sep">–</span>'
+        +'<input type="number" min="0" step="0.01" placeholder="Max $" value="'+h(pd.priceMax||"")+'" oninput="panelDraft.priceMax=this.value"/>'
+      +"</div>";
+
+    var locHtml='<div class="panel-title">📍 Location</div>'
+      +'<select oninput="panelDraft.location=this.value">'
+        +'<option value="">— No location —</option>'
+        +locations.map(function(loc){return'<option value="'+h(loc)+'"'+(pd.location===loc?" selected":"")+'>'+h(loc)+"</option>";}).join("")
+      +"</select>";
+
+    var tagsHtml='<div class="panel-title">🏷️ Tags</div>'
+      +'<div class="tpill-grid">'+ALL_TAGS.map(function(t){var sel=pd.tags.indexOf(t.id)>=0;return'<button class="tpill'+(sel?" on":"")+'" style="'+(sel?"border-color:"+t.tc+";background:"+t.bg+";color:"+t.tc:"")+'" onclick="pdTogTag(\''+t.id+'\')">'+t.emoji+" "+t.label+"</button>";}).join("")+"</div>"
+      +'<div class="panel-row" style="margin-top:4px"><input id="ctInput" placeholder="Custom tag…" style="flex:1;padding:5px 8px;border:1px solid #EDD5CC;border-radius:6px;font-size:11px;background:#fff;outline:none"/><button class="btn-sm btn-rose" onclick="pdCustomTag()">Add</button></div>';
+
+    panelHtml='<div class="panel">'+statusHtml+linksHtml+imgsHtml+notesHtml+priceHtml+locHtml+tagsHtml
+      +'<div class="panel-row"><button class="btn-sm btn-save" data-k="'+k+'" onclick="savePanel(this.dataset.k)">Save</button><button class="btn-sm btn-cancel" onclick="closePanel()">Cancel</button><button class="btn-sm btn-clear" data-k="'+k+'" onclick="clearPanel(this.dataset.k)">Clear all</button></div>'
+    +"</div>";
+  }
+
+  return'<div class="item s-'+st+'" data-k="'+k+'" data-rid="'+room.id+'">'
+    +'<div class="item-row">'
+      +dragHandle+delBtn
+      +'<span class="status-pill '+so.cls+'">'+so.label+'</span>'
+      +'<div class="item-main">'
+        +(showRoom?'<span style="font-size:10px;color:#8A5A62;margin-right:3px">['+h(room.label)+"]</span>":"")
+        +'<span class="item-name'+(st==="own"?" own":"")+'">'+h(name)+"</span>"
+      +"</div>"
+      +'<div class="item-btns">'+attBtn+"</div>"
+    +"</div>"
+    +prevHtml+panelHtml
+  +"</div>";
+}
+
+// ── ACTIONS ──────────────────────────────────────────────────────────────────
+function cycleStatus(k){itemStatus[k]=nextStatus(itemStatus[k]||"need");queueSave();render();}
+function setRoom(id){activeRoom=id;openPanel=null;tagPickerKey=null;render();}
+function setView(v){viewMode=v;activeTag=null;searchQ="";render();}
+function setTag(id){activeTag=activeTag===id?null:id;render();}
+function setLoc(loc){activeLoc=loc;render();}
+function setSearch(v){searchQ=v;render();}
+function setSort(v){sortBy=v;render();}
+function setTrip(v){tripMode=v;render();}
+function toggleEdit(){editMode=!editMode;confirmDelKey=null;tagPickerKey=null;openPanel=null;addingRoom=false;confirmDelRoomId=null;render();}
+function setConf(k){confirmDelKey=k;render();}
+
+function doDelete(rid,name){
+  var r=rooms.find(function(x){return x.id===rid;});
+  if(r)r.items=r.items.filter(function(n){return n!==name;});
+  var k=mk(rid,name);delete itemStatus[k];delete meta[k];
+  confirmDelKey=null;queueSave();render();
+}
+
+function doAddItem(){
+  var inp=document.getElementById("addInput");if(!inp)return;
+  var text=inp.value.trim();if(!text)return;
+  var r=rooms.find(function(x){return x.id===activeRoom;});if(!r)return;
+  if(r.items.indexOf(text)>=0){inp.value="";return;}
+  r.items.push(text);
+  var k=mk(activeRoom,text);
+  itemStatus[k]="need";meta[k]={tags:[],links:[],images:[],notes:"",priceMin:"",priceMax:"",location:""};
+  queueSave();render();
+}
+
+// ── Room management
+function showAddRoom(){addingRoom=true;confirmDelRoomId=null;render();}
+function cancelAddRoom(){addingRoom=false;render();}
+function doAddRoom(){
+  var em=document.getElementById("nre"),nm=document.getElementById("nrn");
+  if(!nm||!nm.value.trim())return;
+  var label=nm.value.trim(),emoji=(em&&em.value.trim())||"🏠";
+  var id="r_"+Date.now();
+  rooms.push({id:id,label:label,emoji:emoji,items:[]});
+  activeRoom=id;addingRoom=false;queueSave();render();
+}
+function confirmDelRoom(id){confirmDelRoomId=id;addingRoom=false;render();}
+function cancelDelRoom(){confirmDelRoomId=null;render();}
+function doDelRoom(id){
+  var r=rooms.find(function(x){return x.id===id;});
+  if(r)r.items.forEach(function(n){var k=mk(id,n);delete itemStatus[k];delete meta[k];});
+  rooms=rooms.filter(function(x){return x.id!==id;});
+  if(activeRoom===id)activeRoom=rooms.length>0?rooms[0].id:"";
+  confirmDelRoomId=null;queueSave();render();
+}
+
+// ── Location management
+function addLocation(){
+  var name=prompt("New location name (e.g. Sarasota, FL):");
+  if(name&&name.trim()&&locations.indexOf(name.trim())<0){locations.push(name.trim());queueSave();render();}
+}
+
+// ── Panel
+function togPanel(k){
+  if(openPanel===k){openPanel=null;panelDraft=null;}
+  else{var m=gm(k);panelDraft={status:itemStatus[k]||"need",tags:m.tags.slice(),links:(m.links||[]).slice(),images:(m.images||[]).slice(),notes:m.notes||"",priceMin:m.priceMin||"",priceMax:m.priceMax||"",location:m.location||""};openPanel=k;}
+  render();
+}
+function closePanel(){openPanel=null;panelDraft=null;render();}
+function savePanel(k){
+  if(!panelDraft)return;
+  var m=gm(k);
+  if(panelDraft.status)itemStatus[k]=panelDraft.status;
+  m.tags=panelDraft.tags;m.links=panelDraft.links;m.images=panelDraft.images;
+  m.notes=panelDraft.notes;m.priceMin=panelDraft.priceMin;m.priceMax=panelDraft.priceMax;
+  m.location=panelDraft.location;
+  openPanel=null;panelDraft=null;queueSave();render();
+}
+function clearPanel(k){
+  meta[k]={tags:[],links:[],images:[],notes:"",priceMin:"",priceMax:"",location:""};
+  openPanel=null;panelDraft=null;queueSave();render();
+}
+function pdLinkDel(i){panelDraft.links.splice(i,1);render();}
+function pdLinkAdd(){panelDraft.links.push("");render();}
+function pdImgDel(i){panelDraft.images.splice(i,1);render();}
+function pdTogTag(tid){var i=panelDraft.tags.indexOf(tid);if(i>=0)panelDraft.tags.splice(i,1);else panelDraft.tags.push(tid);render();}
+function pdCustomTag(){
+  var inp=document.getElementById("ctInput");if(!inp||!inp.value.trim())return;
+  var v=inp.value.trim();
+  if(!ALL_TAGS.find(function(t){return t.label===v;}))ALL_TAGS.push({id:"c_"+v.toLowerCase().replace(/\s+/g,"_"),label:v,emoji:"🔖",tc:"#6B1A2A",bg:"#FAE8DC"});
+  var t=ALL_TAGS.find(function(t){return t.label===v;});
+  if(t&&panelDraft.tags.indexOf(t.id)<0)panelDraft.tags.push(t.id);
+  inp.value="";render();
+}
+
+// ── Images
+var currentImgKey=null;
+function triggerItemImgs(){document.getElementById("fi").click();}
+document.getElementById("fi").addEventListener("change",function(e){
+  var files=Array.from(e.target.files);if(!files.length||!panelDraft)return;
+  var loaded=0;
+  files.forEach(function(f){
+    var rd=new FileReader();
+    rd.onload=function(ev){compressImg(ev.target.result,function(c){panelDraft.images.push(c);loaded++;if(loaded===files.length)render();});};
+    rd.readAsDataURL(f);
+  });
+  e.target.value="";
+});
+var currentRoomId=null;
+function triggerRoomImg(rid){currentRoomId=rid;document.getElementById("ri").click();}
+function setRoomImg(rid,val){roomImgs[rid]=val;queueSave();render();}
+document.getElementById("ri").addEventListener("change",function(e){
+  var f=e.target.files[0];if(!f)return;
+  var rd=new FileReader();
+  rd.onload=function(ev){compressImg(ev.target.result,function(c){roomImgs[currentRoomId]=c;queueSave();render();});};
+  rd.readAsDataURL(f);e.target.value="";
+});
+function compressImg(dataUrl,cb){
+  try{
+    var img=new Image();
+    img.onload=function(){var MAX=800,w=img.width,wh=img.height;if(w>MAX){wh=Math.round(wh*MAX/w);w=MAX;}var c=document.createElement("canvas");c.width=w;c.height=wh;c.getContext("2d").drawImage(img,0,0,w,wh);cb(c.toDataURL("image/jpeg",.6));};
+    img.onerror=function(){cb(dataUrl);};img.src=dataUrl;
+  }catch(e){cb(dataUrl);}
+}
+
+
+// Status changes handled inside panel
+
+// ── DRAG TO REORDER (handle only) ────────────────────────────────────────────
+var dragKey=null,dragRoomId=null;
+function onHandleDragStart(e){
+  dragKey=e.currentTarget.dataset.k;
+  dragRoomId=e.currentTarget.dataset.rid;
+  e.currentTarget.classList.add("dragging-src");
+  e.dataTransfer.effectAllowed="move";
+  e.stopPropagation();
+}
+function onHandleDragEnd(e){e.currentTarget.classList.remove("dragging-src");}
+// drag handled by delegated listeners above
+
+// Touch drag support for mobile
+var touchDragKey=null,touchDragRoomId=null,touchDragEl=null,touchClone=null;
+function onTouchStart(e){
+  // Only drag handles trigger this
+  var el=e.currentTarget;
+  if(!el.classList.contains("drag-handle"))return;
+  e.preventDefault();
+  touchDragKey=el.dataset.k;
+  touchDragRoomId=el.dataset.rid;
+  touchDragEl=el;
+  var itemEl=el.closest(".item")||el;
+  touchClone=itemEl.cloneNode(true);
+  touchClone.style.cssText="position:fixed;opacity:0.7;pointer-events:none;z-index:9999;width:"+itemEl.offsetWidth+"px;left:"+itemEl.getBoundingClientRect().left+"px;top:"+itemEl.getBoundingClientRect().top+"px;border-radius:11px;";
+  document.body.appendChild(touchClone);
+  itemEl.style.opacity="0.3";
+  touchDragEl=itemEl;
+}
+function onTouchMove(e){
+  if(!touchClone)return;
+  e.preventDefault();
+  var t=e.touches[0];
+  touchClone.style.left=(t.clientX-touchClone.offsetWidth/2)+"px";
+  touchClone.style.top=(t.clientY-30)+"px";
+}
+function onTouchEnd(e){
+  if(!touchClone){return;}
+  touchClone.remove();touchClone=null;
+  if(touchDragEl){touchDragEl.style.opacity="";}
+  var t=e.changedTouches[0];
+  var el=document.elementFromPoint(t.clientX,t.clientY);
+  // Walk up to find item with data-k
+  var target=el;
+  while(target&&!target.dataset.k)target=target.parentElement;
+  if(target&&target.dataset.k&&target.dataset.k!==touchDragKey&&target.dataset.rid===touchDragRoomId){
+    var r=rooms.find(function(x){return x.id===touchDragRoomId;});
+    if(r){
+      var dragName=touchDragKey.split("::").slice(1).join("::");
+      var targetName=target.dataset.k.split("::").slice(1).join("::");
+      var di=r.items.indexOf(dragName),ti=r.items.indexOf(targetName);
+      if(di>=0&&ti>=0){r.items.splice(di,1);r.items.splice(ti,0,dragName);queueSave();render();}
+    }
+  }
+  touchDragKey=null;touchDragRoomId=null;touchDragEl=null;
+}
+
+// ── DELEGATED DRAG DROP ──────────────────────────────────────────────────────
+document.addEventListener("dragover",function(e){
+  if(!dragKey)return;
+  var item=e.target.closest(".item[data-k]");
+  if(!item)return;
+  e.preventDefault();
+  // Remove drag-over from all others
+  document.querySelectorAll(".item.drag-over").forEach(function(el){if(el!==item)el.classList.remove("drag-over");});
+  item.classList.add("drag-over");
+});
+document.addEventListener("dragleave",function(e){
+  var item=e.target.closest(".item[data-k]");
+  if(item)item.classList.remove("drag-over");
+});
+document.addEventListener("drop",function(e){
+  if(!dragKey)return;
+  var item=e.target.closest(".item[data-k]");
+  if(!item)return;
+  e.preventDefault();
+  document.querySelectorAll(".item.drag-over").forEach(function(el){el.classList.remove("drag-over");});
+  var targetKey=item.dataset.k;
+  var targetRoomId=item.dataset.rid;
+  if(!targetKey||dragKey===targetKey||dragRoomId!==targetRoomId){dragKey=null;dragRoomId=null;return;}
+  var r=rooms.find(function(x){return x.id===dragRoomId;});
+  if(!r){dragKey=null;dragRoomId=null;return;}
+  var dragName=dragKey.split("::").slice(1).join("::");
+  var targetName=targetKey.split("::").slice(1).join("::");
+  var di=r.items.indexOf(dragName),ti=r.items.indexOf(targetName);
+  if(di>=0&&ti>=0){r.items.splice(di,1);r.items.splice(ti,0,dragName);queueSave();render();}
+  dragKey=null;dragRoomId=null;
+});
+
+// ── FORCE SAVE ON HIDE ───────────────────────────────────────────────────────
+// iOS PWA kills the page immediately on close - save synchronously on hide
+document.addEventListener("visibilitychange", function(){
+  if(document.visibilityState === "hidden") saveState(true);
+});
+window.addEventListener("pagehide", function(){ saveState(true); });
+window.addEventListener("beforeunload", function(){ saveState(true); });
+
+// ── BOOT ─────────────────────────────────────────────────────────────────────
+// loadState handles render async (fetches from Supabase first)
+try{loadState();}catch(e){
+  try{initFresh();}catch(e2){}
+  try{render();}catch(e3){
+    document.getElementById("app").innerHTML='<div style="padding:40px 20px;text-align:center"><div style="font-size:36px;margin-bottom:12px">⚠️</div><div style="font-size:15px;font-weight:700;color:#C0392B">Something went wrong</div><div style="font-size:13px;color:#8A5A62;margin:8px 0 20px">Tap below to reset</div><button onclick="localStorage.clear();location.reload()" style="padding:12px 24px;background:#C0392B;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700">Reset & Reload</button></div>';
+  }
+}
+</script>
+</body>
+</html>
